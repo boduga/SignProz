@@ -286,11 +286,17 @@ export default function HomePage() {
         </button>
       </main>
 
-      <footer className="border-t border-slate-200 py-8 text-center text-sm text-slate-500">
-        <p>© 2026 SignProz. All rights reserved.</p>
-        <div className="flex justify-center gap-6 mt-2">
-          <Link href="/privacy" className="hover:text-slate-700">Privacy Policy</Link>
-          <Link href="/terms" className="hover:text-slate-700">Terms of Service</Link>
+      <footer className="bg-white border-t mt-12">
+        <div className="max-w-7xl mx-auto px-4 py-6 text-xs text-gray-500 flex flex-col sm:flex-row flex-wrap justify-between items-start sm:items-center gap-4">
+          <div>© 2026 SignProz Inc. | Earn 20-30% recurring affiliate commissions</div>
+          <nav className="flex flex-wrap gap-x-5 gap-y-2 items-center" aria-label="Footer">
+            <Link href="/affiliate" className="text-blue-600 font-medium hover:text-blue-800">Affiliate program</Link>
+            <Link href="/demo" className="text-blue-600 font-medium hover:text-blue-800">Demo</Link>
+            <span className="hidden sm:inline text-gray-300" aria-hidden="true">|</span>
+            <Link href="/about" className="hover:text-blue-600">About Us</Link>
+            <Link href="/privacy" className="hover:text-blue-600">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-blue-600">Terms &amp; Conditions</Link>
+          </nav>
         </div>
       </footer>
       <AiFaqModal isOpen={faqOpen} onClose={() => setFaqOpen(false)} />
