@@ -1,11 +1,9 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  env: {
-    NEXT_PUBLIC_APP_URL: process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-  },
+  // VERCEL_URL is automatically injected by Vercel.
+  // NEXT_PUBLIC_APP_URL is set via .env.local (local) or Vercel env vars (production).
+  // No manual env injection needed in Next.js 15+.
 }
 
 export default nextConfig
