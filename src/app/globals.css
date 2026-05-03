@@ -143,3 +143,12 @@
 
 /* Signed state */
 .signature-field.signed { border: 2px solid #10b981; background: #f0fdf4; }
+
+/* Affiliate tier badges (simple bg variants) */
+.tier-bronze { background: #fff7ed; color: #9a3412; }
+.tier-silver { background: #f1f5f9; color: #475569; }
+.tier-gold { background: #fef9c3; color: #854d0e; }
+.tier-platinum { background: #eff6ff; color: #1d4ed8; }
+
+/* Projection table */
+.projection-table td, .projection-table th { padding: 0.75rem; }
