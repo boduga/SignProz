@@ -108,7 +108,7 @@ export default function HomePage() {
             <div className="grid lg:grid-cols-12 gap-8 items-center">
               <div className="lg:col-span-7">
                 <p className="text-xs uppercase tracking-[0.16em] text-indigo-200 font-semibold mb-3">Secure eSignature platform</p>
-                <h1 className="text-4xl sm:text-5xl font-extrabold" style={{ lineHeight: '48px', maxHeight: '96px', overflow: 'hidden' }}>Professional agreement workflows for modern teams</h1>
+                <h1 className="text-4xl sm:text-5xl font-extrabold" style={{ lineHeight: '48px', maxHeight: '144px', overflow: 'hidden' }}>Professional agreement workflows for modern teams</h1>
                 <p className="text-indigo-100 text-sm sm:text-base mt-4 max-w-2xl">SignProz helps you prepare, send, sign, and track agreements at scale while offering partner rewards and API-ready automation.</p>
                 <div className="mt-7 flex flex-wrap gap-3">
                   <Link href="/signup" className="bg-white text-indigo-800 px-5 py-2.5 rounded-xl font-semibold text-sm shadow hover:bg-indigo-50">Start free trial</Link>
