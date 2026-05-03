@@ -122,6 +122,8 @@
 }
 
 .home-faq-bubble {
+  display: inline-flex;
+  align-items: center;
   position: fixed;
   bottom: 1rem;
   right: 1rem;
