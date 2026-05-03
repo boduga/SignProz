@@ -49,6 +49,9 @@ export function MagicLinkEmail({
             This link expires in {expiresIn} days. If you did not expect this email,
             you can safely ignore it.
           </Text>
+          <Text style={styles.sender}>
+            Sent via SignProz on behalf of {ownerEmail}
+          </Text>
         </Container>
       </Body>
     </Html>
@@ -72,4 +75,5 @@ const styles = {
   },
   link: { fontSize: '14px', color: '#2563eb', wordBreak: 'break-all' as const },
   footer: { fontSize: '14px', color: '#9ca3af', marginTop: '32px' },
+  sender: { fontSize: '12px', color: '#9ca3af', marginTop: '4px' },
 }
