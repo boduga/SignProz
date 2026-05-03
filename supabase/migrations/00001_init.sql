@@ -54,7 +54,7 @@ CREATE TABLE public.documents (
   status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'sent', 'partially_signed', 'completed', 'expired')),
   content TEXT,
   template_id TEXT,
-  expiration_days INT NOT NULL DEFAULT 7,
+  expiration_days INT NOT NULL DEFAULT 7 CHECK (expiration_days > 0),
   sent_at TIMESTAMPTZ,
   completed_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -63,6 +63,15 @@ CREATE TABLE public.documents (
 
 GRANT SELECT, INSERT ON TABLE public.documents TO authenticated;
 GRANT UPDATE, DELETE ON TABLE public.documents TO authenticated;
+
+-- RLS for profiles
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "profiles_owner_select" ON public.profiles FOR SELECT
+  USING (id = auth.uid());
+
+CREATE POLICY "profiles_owner_update" ON public.profiles FOR UPDATE
+  USING (id = auth.uid());
 
 -- RLS
 ALTER TABLE public.documents ENABLE ROW LEVEL SECURITY;
@@ -105,7 +114,7 @@ GRANT DELETE ON TABLE public.signers TO authenticated;
 -- RLS
 ALTER TABLE public.signers ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "signers_owner_all" ON public.signers FOR ALL
+CREATE POLICY "signers_owner_all" ON public.signers FOR SELECT, INSERT, UPDATE
   USING (
     document_id IN (
       SELECT id FROM public.documents WHERE user_id = auth.uid()
@@ -118,8 +127,20 @@ CREATE POLICY "signers_anon_read_own" ON public.signers FOR SELECT
 
 CREATE POLICY "signers_anon_update_own" ON public.signers FOR UPDATE
   TO anon
-  USING (magic_token = current_setting('request.headers')::json->>'x-magic-token')
-  WITH CHECK (magic_token = current_setting('request.headers')::json->>'x-magic-token');
+  USING (
+    magic_token = current_setting('request.headers')::json->>'x-magic-token'
+    AND document_id IN (
+      SELECT s.document_id FROM public.signers s
+      WHERE s.magic_token = current_setting('request.headers')::json->>'x-magic-token'
+    )
+  )
+  WITH CHECK (
+    magic_token = current_setting('request.headers')::json->>'x-magic-token'
+    AND document_id IN (
+      SELECT s.document_id FROM public.signers s
+      WHERE s.magic_token = current_setting('request.headers')::json->>'x-magic-token'
+    )
+  );
 
 CREATE POLICY "signers_owner_delete_draft" ON public.signers FOR DELETE
   USING (
@@ -164,9 +185,6 @@ CREATE POLICY "signature_fields_owner_all" ON public.signature_fields FOR ALL
   );
 
 CREATE POLICY "signature_fields_anon_read" ON public.signature_fields FOR SELECT
-  TO anon USING (true);
-
-CREATE POLICY "signature_fields_anon_update" ON public.signature_fields FOR UPDATE
   TO anon USING (true);
 
 -- =============================================
@@ -258,3 +276,26 @@ CREATE TRIGGER profiles_updated_at
 CREATE TRIGGER documents_updated_at
   BEFORE UPDATE ON public.documents
   FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
+CREATE TRIGGER signers_updated_at
+  BEFORE UPDATE ON public.signers
+  FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
+CREATE TRIGGER signature_fields_updated_at
+  BEFORE UPDATE ON public.signature_fields
+  FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
+CREATE TRIGGER audit_logs_updated_at
+  BEFORE UPDATE ON public.audit_logs
+  FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
+CREATE TRIGGER affiliate_referrals_updated_at
+  BEFORE UPDATE ON public.affiliate_referrals
+  FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
+-- Indexes
+CREATE INDEX idx_signers_magic_token ON public.signers(magic_token);
+CREATE INDEX idx_signers_document_id ON public.signers(document_id);
+CREATE INDEX idx_signature_fields_document_id ON public.signature_fields(document_id);
+CREATE INDEX idx_signature_fields_signer_id ON public.signature_fields(signer_id);
+CREATE INDEX idx_audit_logs_document_id ON public.audit_logs(document_id);
