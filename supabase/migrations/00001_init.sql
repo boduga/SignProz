@@ -114,7 +114,21 @@ GRANT DELETE ON TABLE public.signers TO authenticated;
 -- RLS
 ALTER TABLE public.signers ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "signers_owner_all" ON public.signers FOR SELECT, INSERT, UPDATE
+CREATE POLICY "signers_owner_select" ON public.signers FOR SELECT
+  USING (
+    document_id IN (
+      SELECT id FROM public.documents WHERE user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "signers_owner_insert" ON public.signers FOR INSERT
+  WITH CHECK (
+    document_id IN (
+      SELECT id FROM public.documents WHERE user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "signers_owner_update" ON public.signers FOR UPDATE
   USING (
     document_id IN (
       SELECT id FROM public.documents WHERE user_id = auth.uid()

@@ -1,8 +1,17 @@
-import { Resend } from 'resend'
+import nodemailer from 'nodemailer'
 
-function getResend() {
-  if (!process.env.RESEND_API_KEY) return null
-  return new Resend(process.env.RESEND_API_KEY)
+let transporter: nodemailer.Transporter | null = null
+
+function getTransporter() {
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || '127.0.0.1',
+      port: Number(process.env.SMTP_PORT || 1025),
+      secure: false,
+      ignoreTLS: true,
+    })
+  }
+  return transporter
 }
 
 interface ExpiredLinkPayload {
@@ -15,22 +24,19 @@ interface ExpiredLinkPayload {
 }
 
 export async function sendExpiredLinkNotification(payload: ExpiredLinkPayload) {
-  const resend = getResend()
-  if (!resend) return
-  const { error } = await resend.emails.send({
-    from: 'SignProz <noreply@signproz.com>',
-    to: payload.ownerEmail,
-    subject: `Signing link expired: ${payload.documentTitle}`,
-    html: `
-      <p>Hi ${payload.ownerName},</p>
-      <p>The signing link sent to <strong>${payload.signerName} (${payload.signerEmail})</strong>
-      has expired for the document <strong>${payload.documentTitle}</strong>.</p>
-      <p>You can resend the link from your SignProz dashboard.</p>
-    `,
-  })
-
-  if (error) {
-    console.error('Failed to send expired notification:', error)
+  try {
+    await getTransporter().sendMail({
+      from: 'SignProz <noreply@signproz.com>',
+      to: payload.ownerEmail,
+      subject: `Signing link expired: ${payload.documentTitle}`,
+      html: `
+        <p>Hi ${payload.ownerName},</p>
+        <p>The signing link sent to <strong>${payload.signerName} (${payload.signerEmail})</strong>
+        has expired for the document <strong>${payload.documentTitle}</strong>.</p>
+        <p>You can resend the link from your SignProz dashboard.</p>
+      `,
+    })
+  } catch {
     // Non-critical — don't throw
   }
 }

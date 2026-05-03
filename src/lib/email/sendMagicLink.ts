@@ -1,9 +1,19 @@
-import { Resend } from 'resend'
+import nodemailer from 'nodemailer'
 import { MagicLinkEmail } from './templates/MagicLinkEmail'
+import { render } from '@react-email/components'
 
-function getResend() {
-  if (!process.env.RESEND_API_KEY) throw new Error('RESEND_API_KEY not configured')
-  return new Resend(process.env.RESEND_API_KEY)
+let transporter: nodemailer.Transporter | null = null
+
+function getTransporter() {
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || '127.0.0.1',
+      port: Number(process.env.SMTP_PORT || 1025),
+      secure: false,
+      ignoreTLS: true,
+    })
+  }
+  return transporter
 }
 
 interface Signer {
@@ -24,24 +34,23 @@ export async function sendMagicLinkEmail(
   document: Document,
   ownerEmail: string
 ) {
-  const resend = getResend()
   const magicUrl = `${process.env.NEXT_PUBLIC_APP_URL}/sign/${document.id}?token=${signer.magic_token}`
 
-  const { error } = await resend.emails.send({
-    from: 'SignProz <noreply@signproz.com>',
-    to: signer.email,
-    subject: `You've been asked to sign: ${document.title}`,
-    react: MagicLinkEmail({
+  const html = await render(
+    MagicLinkEmail({
       signerName: signer.name || 'there',
       documentTitle: document.title,
       magicUrl,
       ownerEmail,
       expiresIn: document.expiration_days,
     }),
-  })
+    { pretty: true }
+  )
 
-  if (error) {
-    console.error('Failed to send magic link email:', error)
-    throw error
-  }
+  await getTransporter().sendMail({
+    from: 'SignProz <noreply@signproz.com>',
+    to: signer.email,
+    subject: `You've been asked to sign: ${document.title}`,
+    html,
+  })
 }

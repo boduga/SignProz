@@ -1,9 +1,19 @@
-import { Resend } from 'resend'
+import nodemailer from 'nodemailer'
 import { CompletionEmail } from './templates/CompletionEmail'
+import { render } from '@react-email/components'
 
-function getResend() {
-  if (!process.env.RESEND_API_KEY) throw new Error('RESEND_API_KEY not configured')
-  return new Resend(process.env.RESEND_API_KEY)
+let transporter: nodemailer.Transporter | null = null
+
+function getTransporter() {
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || '127.0.0.1',
+      port: Number(process.env.SMTP_PORT || 1025),
+      secure: false,
+      ignoreTLS: true,
+    })
+  }
+  return transporter
 }
 
 interface CompletionPayload {
@@ -16,16 +26,12 @@ interface CompletionPayload {
 }
 
 export async function sendCompletionEmail(payload: CompletionPayload) {
-  const resend = getResend()
-  const { error } = await resend.emails.send({
+  const html = await render(CompletionEmail(payload), { pretty: true })
+
+  await getTransporter().sendMail({
     from: 'SignProz <noreply@signproz.com>',
     to: payload.ownerEmail,
     subject: `Document signed: ${payload.documentTitle}`,
-    react: CompletionEmail(payload),
+    html,
   })
-
-  if (error) {
-    console.error('Failed to send completion email:', error)
-    throw error
-  }
 }
