@@ -118,7 +118,7 @@ export function SignatureModal({ isOpen, onClose, onSave, signerName, signerEmai
   const clearTyped = () => setTypedValue('')
 
   const handleSave = () => {
-    if (tab === 'typed') {
+    if (tab === 'type') {
       if (!typedValue.trim()) return
       onSave({ type: 'typed', value: typedValue.trim() })
     } else {
