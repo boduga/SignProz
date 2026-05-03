@@ -1,0 +1,2608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>SignProz | Smart eSignature Platform</title>
+  <!-- Tailwind + Font Awesome + Google Fonts -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    .document-container { background: white; box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1); transition: all 0.2s ease; }
+    .signature-field { transition: all 0.15s ease; cursor: pointer; backdrop-filter: blur(2px); background: rgba(255,255,240,0.9); border: 2px dashed #3b82f6; border-radius: 12px; padding: 6px 10px; min-width: 120px; text-align: center; font-size: 12px; font-weight: 500; box-shadow: 0 2px 8px rgba(0,0,0,0.05); z-index: 20; }
+    .signature-field.signed { border: 2px solid #10b981; background: #f0fdf4; }
+    .audit-entry { border-left: 3px solid #3b82f6; transition: all 0.1s; }
+    .btn-primary { background: linear-gradient(105deg, #2563eb 0%, #1e40af 100%); }
+    .draw-canvas { border: 2px solid #e2e8f0; border-radius: 16px; cursor: crosshair; background: white; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .referral-stats-card { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); }
+    .tier-bronze { background: linear-gradient(135deg, #cd7f32 0%, #b87333 100%); }
+    .tier-silver { background: linear-gradient(135deg, #a8a9ad 0%, #8a8d91 100%); }
+    .tier-gold { background: linear-gradient(135deg, #ffd700 0%, #daa520 100%); }
+    .tier-platinum { background: linear-gradient(135deg, #e5e4e2 0%, #b0b0b0 100%); }
+    .projection-table td { padding: 10px 8px; border-bottom: 1px solid #e5e7eb; }
+
+    /* Subscriber portal — document sidebar */
+    .dashboard-portal-wrapper { align-items: stretch; }
+    .signproz-sidebar {
+      width: 100%;
+      max-width: 260px;
+      flex-shrink: 0;
+      background-color: #ffffff;
+      border-right: 1px solid #e5e7eb;
+      padding: 16px 14px;
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    }
+    @media (max-width: 1023px) {
+      .signproz-sidebar {
+        max-width: none;
+        border-right: none;
+        border-bottom: 1px solid #e5e7eb;
+      }
+    }
+    @media (min-width: 1024px) {
+      .signproz-sidebar {
+        width: 240px;
+        min-height: calc(100vh - 4.5rem);
+        position: sticky;
+        top: 4.5rem;
+        align-self: flex-start;
+        max-height: calc(100vh - 4.5rem);
+        overflow-y: auto;
+      }
+    }
+    .signproz-sidebar .sidebar-action { margin-bottom: 4px; }
+    .signproz-sidebar .upload-btn {
+      width: 100%;
+      background-color: #ff4e00;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      margin-bottom: 8px;
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+    .signproz-sidebar .upload-btn:hover { background-color: #e64600; }
+    .signproz-sidebar .cloud-dropdown {
+      width: 100%;
+      border: 1px solid #d1d5db;
+      padding: 10px 8px;
+      border-radius: 6px;
+      text-align: center;
+      font-size: 13px;
+      color: #64748b;
+      margin-bottom: 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: #fafafa;
+    }
+    .signproz-sidebar .cloud-dropdown:hover { background: #f1f5f9; border-color: #cbd5e1; }
+    .signproz-sidebar .cloud-dropdown .arrow-down {
+      width: 0; height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 6px solid #64748b;
+    }
+    .signproz-sidebar .nav-list { list-style: none; padding: 0; margin: 0; }
+    .signproz-sidebar .nav-item {
+      display: flex;
+      align-items: center;
+      flex-wrap: nowrap;
+      padding: 10px 6px;
+      font-size: 14px;
+      color: #334155;
+      cursor: pointer;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      width: 100%;
+      text-align: left;
+    }
+    .signproz-sidebar .nav-item:hover { background-color: #f8fafc; }
+    .signproz-sidebar .nav-item .icon { margin-right: 2px; flex-shrink: 0; }
+    .signproz-sidebar .nav-item a,
+    .signproz-sidebar .nav-item span.label { text-decoration: none; color: inherit; margin-left: 6px; flex: 1; }
+    .signproz-sidebar .nav-item.active { color: #1a73e8; font-weight: 600; background: #eff6ff; }
+    .signproz-sidebar .nav-sub-item {
+      display: block;
+      width: 100%;
+      padding: 8px 8px 8px 38px;
+      font-size: 13px;
+      color: #64748b;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      text-align: left;
+      border-radius: 6px;
+    }
+    .signproz-sidebar .nav-sub-item:hover { background-color: #f1f5f9; color: #334155; }
+    .signproz-sidebar .nav-sub-item.active { color: #1a73e8; font-weight: 600; background: #eff6ff; }
+    .signproz-sidebar .badge-new {
+      background-color: #2563eb;
+      color: white;
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: auto;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .signproz-sidebar .cloud-menu {
+      display: none;
+      margin-top: -6px;
+      margin-bottom: 18px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      overflow: hidden;
+      font-size: 12px;
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+    .signproz-sidebar .cloud-menu.open { display: block; }
+    .signproz-sidebar .cloud-menu button {
+      display: block;
+      width: 100%;
+      padding: 8px 12px;
+      text-align: left;
+      border: none;
+      background: #fff;
+      cursor: pointer;
+      color: #475569;
+    }
+    .signproz-sidebar .cloud-menu button:hover { background: #f8fafc; }
+
+    /* Subscriber portal — prepare document: sign & field palette */
+    .signproz-editor-sidebar {
+      width: 100%;
+      max-width: 280px;
+      flex-shrink: 0;
+      background-color: #ffffff;
+      border-right: 1px solid #e5e7eb;
+      padding: 0 0 14px;
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    }
+    @media (max-width: 1023px) {
+      .signproz-editor-sidebar {
+        max-width: none;
+        border-right: none;
+        border-bottom: 1px solid #e5e7eb;
+      }
+    }
+    @media (min-width: 1024px) {
+      .signproz-editor-sidebar {
+        width: 248px;
+        min-height: calc(100vh - 4.5rem);
+        position: sticky;
+        top: 4.5rem;
+        align-self: flex-start;
+        max-height: calc(100vh - 4.5rem);
+        overflow-y: auto;
+      }
+    }
+    .signproz-editor-sidebar .editor-section-head {
+      padding: 12px 14px 8px;
+      border-bottom: 1px solid #e5e7eb;
+      background: #fafafa;
+    }
+    .signproz-editor-sidebar .sidebar-section h3 {
+      font-size: 11px;
+      color: #64748b;
+      margin: 0 0 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+    .signproz-editor-sidebar .sidebar-section.pad-x {
+      padding-left: 10px;
+      padding-right: 10px;
+      padding-top: 10px;
+    }
+    .signproz-editor-sidebar .pal-icon-box {
+      width: 30px;
+      height: 30px;
+      border-radius: 4px;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #64748b;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .signproz-editor-sidebar .drag-item.field-item .pal-icon-box {
+      background: #e0f2fe;
+      border-color: #bae6fd;
+      color: #0369a1;
+    }
+    .signproz-editor-sidebar .drag-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      margin-bottom: 4px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      cursor: grab;
+      transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+      color: #334155;
+      font-size: 13px;
+    }
+    .signproz-editor-sidebar .drag-item:hover {
+      border-color: #e2e8f0;
+      background: #f8fafc;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    }
+    .signproz-editor-sidebar .drag-item:active { cursor: grabbing; }
+    .signproz-editor-sidebar .drag-item .label { flex: 1; min-width: 0; line-height: 1.25; }
+    .signproz-editor-sidebar .separator {
+      border: 0;
+      border-top: 1px solid #e2e8f0;
+      margin: 0;
+    }
+    .signproz-editor-sidebar .signer-selector { margin-bottom: 10px; }
+    .signproz-editor-sidebar .signer-dropdown-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 6px 8px;
+      background: #fff;
+    }
+    .signproz-editor-sidebar .signer-dropdown-wrap .signer-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #60a5fa;
+      flex-shrink: 0;
+    }
+    .signproz-editor-sidebar #signer-dropdown {
+      flex: 1;
+      min-width: 0;
+      border: none;
+      padding: 4px 2px;
+      font-size: 13px;
+      background: transparent;
+      outline: none;
+    }
+    .signproz-editor-sidebar .edit-link {
+      display: inline-block;
+      font-size: 11px;
+      color: #2563eb;
+      text-decoration: none;
+      margin-top: 6px;
+      cursor: pointer;
+      border: none;
+      background: none;
+      padding: 0;
+    }
+    .signproz-editor-sidebar .edit-link:hover { text-decoration: underline; }
+    .signproz-editor-sidebar .field-item { border-left: 3px solid #38bdf8; margin-left: 2px; }
+    .signproz-editor-sidebar .add-fields-block {
+      background: #f8fafc;
+      border-top: 1px solid #e5e7eb;
+      padding-bottom: 4px;
+      margin-top: 2px;
+    }
+    #documentPreview.document-drop-target { outline: 2px dashed #93c5fd; outline-offset: 2px; }
+
+    .dashboard-subscriber-shell {
+      background: linear-gradient(to bottom, #fff 0%, #f8fafc 100%);
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .dashboard-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 10px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .dashboard-tab {
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #64748b;
+      border: none;
+      background: transparent;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      cursor: pointer;
+      border-radius: 8px 8px 0 0;
+    }
+    .dashboard-tab:hover { color: #2563eb; background: rgba(239, 246, 255, 0.6); }
+    .dashboard-tab[aria-selected="true"] {
+      color: #1d4ed8;
+      border-bottom-color: #2563eb;
+      background: #fff;
+    }
+    .dash-doc-row {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      margin-bottom: 8px;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      transition: box-shadow 0.15s ease;
+    }
+    .dash-doc-row:hover { box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08); }
+    @media (min-width: 640px) {
+      .dash-doc-row {
+        flex-direction: row;
+        align-items: center;
+      }
+    }
+    .dash-doc-thumb {
+      width: 52px;
+      height: 68px;
+      flex-shrink: 0;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #94a3b8;
+    }
+    .dash-doc-status {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .dash-doc-status-signed { background: #dcfce7; color: #15803d; }
+    .dash-doc-status-waiting { background: #fef9c3; color: #a16207; }
+    .dash-doc-status-draft { background: #f1f5f9; color: #475569; }
+    #aiAgreementModal .ai-agreement-output h4 { font-weight: 700; color: #0f172a; margin: 0.75rem 0 0.35rem; font-size: 0.95rem; }
+    #aiAgreementModal .ai-agreement-output ul { margin: 0.25rem 0 0.5rem 1rem; padding: 0; list-style: disc; font-size: 0.875rem; color: #334155; }
+    #aiAgreementModal .ai-agreement-output p { font-size: 0.875rem; color: #475569; margin: 0.35rem 0; }
+    #aiAgreementModal .ai-chip { display: inline-block; font-size: 0.7rem; font-weight: 600; padding: 0.15rem 0.5rem; border-radius: 9999px; margin-right: 0.35rem; }
+    #aiAgreementModal .ai-chip-warn { background: #fef3c7; color: #92400e; }
+    #aiAgreementModal .ai-chip-ok { background: #dcfce7; color: #166534; }
+    .feature-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 9999px;
+      border: 1px solid #dbeafe;
+      background: #eff6ff;
+      color: #1e3a8a;
+      font-size: 0.78rem;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+    .home-faq-bubble {
+      position: fixed;
+      right: 1rem;
+      bottom: 1rem;
+      z-index: 35;
+      border-radius: 9999px;
+      background: linear-gradient(120deg, #4f46e5 0%, #1d4ed8 100%);
+      color: #fff;
+      border: none;
+      padding: 0.65rem 0.95rem;
+      box-shadow: 0 10px 24px rgba(29, 78, 216, 0.28);
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+    .home-faq-bubble:hover { filter: brightness(1.05); }
+    @media (max-width: 767px) {
+      .home-faq-bubble { right: 0.7rem; bottom: 0.75rem; padding: 0.55rem 0.8rem; }
+    }
+    #aiFaqModal .faq-msg-user {
+      background: #dbeafe;
+      border: 1px solid #bfdbfe;
+      border-radius: 12px 12px 2px 12px;
+      padding: 0.55rem 0.7rem;
+      font-size: 0.82rem;
+      color: #1e3a8a;
+      max-width: 85%;
+      margin-left: auto;
+      margin-bottom: 0.45rem;
+    }
+    #aiFaqModal .faq-msg-bot {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px 12px 12px 2px;
+      padding: 0.55rem 0.7rem;
+      font-size: 0.82rem;
+      color: #334155;
+      max-width: 90%;
+      margin-right: auto;
+      margin-bottom: 0.45rem;
+      white-space: pre-wrap;
+    }
+    #aiTemplateModal .ai-template-output h4 {
+      margin: 0.65rem 0 0.3rem;
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    #aiTemplateModal .ai-template-output p,
+    #aiTemplateModal .ai-template-output li {
+      font-size: 0.84rem;
+      color: #334155;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-gray-100">
+
+  <!-- APP ROOT -->
+  <div id="appRoot" class="min-h-screen flex flex-col"></div>
+
+  <!-- Signature Modal -->
+  <div id="signatureModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-2xl max-w-md w-full mx-4 shadow-2xl overflow-hidden">
+      <div class="bg-gray-50 px-5 py-3 border-b flex justify-between"><h3 class="font-bold"><i class="fas fa-pen-fancy text-blue-600"></i> Sign Field</h3><button id="closeModalBtn" class="text-gray-400"><i class="fas fa-times"></i></button></div>
+      <div class="p-5"><p class="text-sm">Signer: <span id="modalSignerName" class="font-semibold"></span></p>
+        <div class="flex border-b mb-3 gap-3"><button id="typedTabBtn" class="py-2 text-sm font-medium text-blue-600 border-b-2 border-blue-600">✍️ Type</button><button id="drawTabBtn" class="py-2 text-sm text-gray-500">🎨 Draw</button></div>
+        <div id="typedPanel"><input type="text" id="typedSignatureInput" class="w-full border rounded-xl p-3 text-lg" placeholder="Full name" style="font-family:'Brush Script MT',cursive"><button id="applyTypedBtn" class="mt-3 w-full bg-blue-600 text-white py-2 rounded-xl">Apply</button></div>
+        <div id="drawPanel" class="hidden"><canvas id="signCanvas" width="400" height="150" class="draw-canvas w-full h-auto border rounded-xl"></canvas><div class="flex gap-2 mt-3"><button id="clearCanvasBtn" class="bg-gray-200 px-3 py-1 rounded-lg">Clear</button><button id="applyDrawBtn" class="flex-1 bg-blue-600 text-white py-1 rounded-lg">Save Drawing</button></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Affiliate Program Details Modal -->
+  <div id="affiliateModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all">
+    <div class="bg-white rounded-2xl max-w-4xl w-full mx-4 shadow-2xl overflow-hidden max-h-[85vh] overflow-y-auto">
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-4 flex justify-between items-center sticky top-0">
+        <h3 class="text-xl font-bold text-white"><i class="fas fa-hand-holding-usd mr-2"></i>SignProz Affiliate Program</h3>
+        <button id="closeAffiliateModalBtn" class="text-white hover:text-gray-200"><i class="fas fa-times text-xl"></i></button>
+      </div>
+      <div class="p-6 space-y-6">
+        <div class="bg-blue-50 p-4 rounded-xl">
+          <p class="text-sm text-gray-700">Earn <strong class="text-blue-700">20-30% recurring commission</strong> for every customer you refer who upgrades to a paid SignProz plan. No cap, lifetime earnings.</p>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-lg flex items-center gap-2"><i class="fas fa-chart-line text-green-600"></i> How It Works</h4>
+          <div class="grid md:grid-cols-3 gap-4 mt-3">
+            <div class="bg-gray-50 p-3 rounded-lg text-center"><span class="bg-blue-600 text-white w-6 h-6 inline-flex items-center justify-center rounded-full text-sm font-bold">1</span><p class="text-xs mt-1">Share your unique referral link</p></div>
+            <div class="bg-gray-50 p-3 rounded-lg text-center"><span class="bg-blue-600 text-white w-6 h-6 inline-flex items-center justify-center rounded-full text-sm font-bold">2</span><p class="text-xs mt-1">Friend signs up & upgrades to Pro/Enterprise</p></div>
+            <div class="bg-gray-50 p-3 rounded-lg text-center"><span class="bg-blue-600 text-white w-6 h-6 inline-flex items-center justify-center rounded-full text-sm font-bold">3</span><p class="text-xs mt-1">You earn 20-30% monthly recurring commission</p></div>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-lg flex items-center gap-2"><i class="fas fa-trophy text-yellow-600"></i> Affiliate Tiers</h4>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+            <div class="bg-amber-50 p-3 rounded-lg text-center border border-amber-200"><div class="w-10 h-10 rounded-full tier-bronze mx-auto flex items-center justify-center text-white font-bold">B</div><p class="font-bold mt-1">Bronze</p><p class="text-xs">0-4 referrals</p><p class="text-xs text-green-600">20% commission</p></div>
+            <div class="bg-gray-50 p-3 rounded-lg text-center border border-gray-200"><div class="w-10 h-10 rounded-full tier-silver mx-auto flex items-center justify-center text-white font-bold">S</div><p class="font-bold mt-1">Silver</p><p class="text-xs">5-14 referrals</p><p class="text-xs text-green-600">22% commission</p></div>
+            <div class="bg-yellow-50 p-3 rounded-lg text-center border border-yellow-200"><div class="w-10 h-10 rounded-full tier-gold mx-auto flex items-center justify-center text-white font-bold">G</div><p class="font-bold mt-1">Gold</p><p class="text-xs">15-49 referrals</p><p class="text-xs text-green-600">25% commission</p></div>
+            <div class="bg-gray-100 p-3 rounded-lg text-center border border-gray-300"><div class="w-10 h-10 rounded-full tier-platinum mx-auto flex items-center justify-center text-gray-800 font-bold">P</div><p class="font-bold mt-1">Platinum</p><p class="text-xs">50+ referrals</p><p class="text-xs text-green-600">30% commission</p></div>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-lg flex items-center gap-2"><i class="fas fa-dollar-sign text-green-600"></i> Commission Structure</h4>
+          <table class="w-full text-sm mt-2 border-collapse">
+            <tr class="border-b"><td class="py-2">Pro Plan ($29/month)</td><td class="py-2 text-green-700 font-semibold">$5.80-$8.70/month recurring</td><td class="py-2 text-xs text-gray-500">$69.60-$104.40/year per referral</td></tr>
+            <tr class="border-b"><td class="py-2">Enterprise Plan ($499/month)</td><td class="py-2 text-green-700 font-semibold">$99.80-$149.70/month recurring</td><td class="py-2 text-xs text-gray-500">$1,197.60-$1,796.40/year per referral</td></tr>
+          </table>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-lg flex items-center gap-2"><i class="fas fa-clock"></i> Payout Schedule</h4>
+          <ul class="list-disc list-inside text-sm text-gray-600 space-y-1 mt-2">
+            <li>Payouts issued monthly on the 15th</li>
+            <li>Minimum payout: $50 (accumulates until threshold met)</li>
+            <li>Payment methods: PayPal, Stripe, or Bank Transfer</li>
+            <li>Real-time tracking in your affiliate dashboard</li>
+          </ul>
+        </div>
+
+        <button id="closeAffiliateModalFooterBtn" class="w-full bg-blue-600 text-white py-2 rounded-xl font-semibold">Got it</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Agreement Assistant -->
+  <div id="aiAgreementModal" class="fixed inset-0 bg-black/55 backdrop-blur-sm flex items-center justify-center z-50 hidden p-4">
+    <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] shadow-2xl flex flex-col overflow-hidden border border-slate-200">
+      <div class="bg-gradient-to-r from-violet-600 to-indigo-700 px-5 py-4 flex justify-between items-center gap-3 flex-shrink-0">
+        <div>
+          <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fas fa-magic"></i> AI agreement assistant</h3>
+          <p class="text-xs text-violet-100 mt-0.5">Summaries, risk flags, and checklist ideas for drafts you are about to send.</p>
+        </div>
+        <button type="button" id="closeAiAgreementModalBtn" class="text-white/90 hover:text-white p-2 rounded-lg hover:bg-white/10" aria-label="Close"><i class="fas fa-times text-xl"></i></button>
+      </div>
+      <div class="p-4 sm:p-5 overflow-y-auto flex-1 space-y-4">
+        <label for="aiAgreementInput" class="block text-sm font-semibold text-slate-800">Agreement or clause text</label>
+        <textarea id="aiAgreementInput" class="w-full border border-slate-200 rounded-xl p-3 text-sm min-h-[140px] focus:ring-2 focus:ring-violet-200 focus:border-violet-400 outline-none" placeholder="Paste NDA, MSA, offer letter, or policy language here…"></textarea>
+        <p class="text-xs text-slate-500">Built-in analysis runs in your browser. Optionally set <code class="bg-slate-100 px-1 rounded">window.SIGNPROZ_AI_AGREEMENT_API</code> to your server base URL and implement <code class="bg-slate-100 px-1 rounded">POST /api/agreement-analyze</code> returning JSON <code class="bg-slate-100 px-1 rounded">{ "html": "..." }</code> for live model output.</p>
+        <div class="flex flex-wrap gap-2 items-center">
+          <button type="button" id="aiAgreementRunBtn" class="btn-primary text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow"><i class="fas fa-robot mr-2" aria-hidden="true"></i>Analyze with AI</button>
+          <span id="aiAgreementStatus" class="text-xs text-slate-500"></span>
+        </div>
+        <div id="aiAgreementOutput" class="ai-agreement-output rounded-xl border border-slate-100 bg-slate-50/80 p-4 min-h-[120px] text-left">
+          <p class="text-sm text-slate-500">Results will appear here after you run analysis.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI FAQ Assistant -->
+  <div id="aiFaqModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 hidden p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] border border-slate-200 shadow-2xl overflow-hidden flex flex-col">
+      <div class="px-5 py-4 bg-gradient-to-r from-indigo-600 to-blue-700 text-white flex items-center justify-between">
+        <div>
+          <h3 class="font-bold text-lg flex items-center gap-2"><i class="fas fa-comments"></i> AI FAQ assistant</h3>
+          <p class="text-xs text-indigo-100 mt-0.5">Ask about plans, API, integrations, compliance, and signing flow.</p>
+        </div>
+        <button type="button" id="closeAiFaqModalBtn" class="p-2 rounded-lg hover:bg-white/10" aria-label="Close"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="p-4 flex-1 overflow-y-auto bg-slate-50/70">
+        <div id="aiFaqMessages"></div>
+      </div>
+      <div class="p-4 border-t bg-white">
+        <div class="flex flex-wrap gap-2 mb-3">
+          <button type="button" class="faq-quick-btn text-xs bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full" data-faq-q="How does affiliate commission work?">Affiliate commission</button>
+          <button type="button" class="faq-quick-btn text-xs bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full" data-faq-q="What API and integrations are supported?">API & integrations</button>
+          <button type="button" class="faq-quick-btn text-xs bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full" data-faq-q="How do I send documents in bulk?">Bulk sending</button>
+          <button type="button" class="faq-quick-btn text-xs bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full" data-faq-q="Do you support HIPAA compliant workflows?">HIPAA</button>
+        </div>
+        <div class="flex gap-2">
+          <input id="aiFaqInput" type="text" class="flex-1 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 outline-none" placeholder="Ask SignProz a question...">
+          <button type="button" id="aiFaqSendBtn" class="btn-primary text-white px-4 py-2 rounded-xl text-sm font-semibold">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Template Generation -->
+  <div id="aiTemplateModal" class="fixed inset-0 bg-black/55 backdrop-blur-sm flex items-center justify-center z-50 hidden p-4">
+    <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] shadow-2xl flex flex-col overflow-hidden border border-slate-200">
+      <div class="bg-gradient-to-r from-teal-600 to-cyan-700 px-5 py-4 flex justify-between items-center gap-3 flex-shrink-0">
+        <div>
+          <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fas fa-file-circle-plus"></i> AI document / template generation</h3>
+          <p class="text-xs text-cyan-100 mt-0.5">Describe what you need; SignProz will draft a starter template and fields.</p>
+        </div>
+        <button type="button" id="closeAiTemplateModalBtn" class="text-white/90 hover:text-white p-2 rounded-lg hover:bg-white/10" aria-label="Close"><i class="fas fa-times text-xl"></i></button>
+      </div>
+      <div class="p-4 sm:p-5 overflow-y-auto flex-1 space-y-4">
+        <label for="aiTemplatePromptInput" class="block text-sm font-semibold text-slate-800">Template request</label>
+        <textarea id="aiTemplatePromptInput" class="w-full border border-slate-200 rounded-xl p-3 text-sm min-h-[120px] focus:ring-2 focus:ring-cyan-200 focus:border-cyan-400 outline-none" placeholder="Example: Generate a 2-party SaaS agreement template with NDA clause, payment terms, and signature blocks."></textarea>
+        <div class="flex flex-wrap gap-2 items-center">
+          <button type="button" id="aiTemplateRunBtn" class="btn-primary text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow"><i class="fas fa-sparkles mr-2" aria-hidden="true"></i>Generate draft</button>
+          <button type="button" id="aiTemplateApplyBtn" class="bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow disabled:opacity-40 disabled:cursor-not-allowed" disabled><i class="fas fa-plus mr-2" aria-hidden="true"></i>Create template</button>
+          <span id="aiTemplateStatus" class="text-xs text-slate-500"></span>
+        </div>
+        <div id="aiTemplateOutput" class="ai-template-output rounded-xl border border-slate-100 bg-slate-50/80 p-4 min-h-[120px] text-left">
+          <p class="text-sm text-slate-500">Draft summary appears here. Click <strong>Create template</strong> to add it to your template library.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="addModeBadge" class="hidden fixed bottom-6 right-6 bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg text-sm z-40"><i class="fas fa-hand-pointer"></i> Add mode active</div>
+
+  <script>
+    // ----------------------- STATE & GLOBAL -----------------------
+    const KNOWN_PAGES = new Set(['home', 'pricing', 'about', 'privacy', 'terms', 'login', 'signup', 'templates', 'dashboard', 'affiliate', 'demo']);
+
+    function syncRouteFromHash() {
+      let page = (window.location.hash || '').replace(/^#/, '').trim();
+      if (!page) page = 'home';
+      if (!KNOWN_PAGES.has(page)) {
+        page = 'home';
+        window.history.replaceState({ page: 'home' }, '', '#home');
+      }
+      return page;
+    }
+
+    let currentUser = null;
+    let activePage = syncRouteFromHash();
+    let signatureFields = [];
+    let signers = [];
+    let auditLog = [];
+    let addFieldMode = false;
+    let currentFieldIdForModal = null;
+    let drawing = false;
+    let canvasCtx = null, canvasEl = null;
+    let currentDrawDataUrl = null;
+    
+    let affiliateReferrals = [];
+    let monthlyDocumentCount = 0;
+    let dashboardExpectedPayout = 0;
+    let stripeConnectStep = 'idle';
+    
+    const PRO_MONTHLY_LIMIT = 200;
+    const FREE_TIER_LIMIT = 3;
+    const MIN_AFFILIATE_WITHDRAWAL = 50;
+
+    /** Set `window.SIGNPROZ_REFERRALS_API = ''` before this script for same-origin, or e.g. `https://your-api.vercel.app` when the HTML is on GitHub Pages. */
+    const REFERRALS_API_BASE = (typeof window.SIGNPROZ_REFERRALS_API === 'string'
+      ? window.SIGNPROZ_REFERRALS_API
+      : 'http://localhost:3000').replace(/\/+$/, '');
+    
+    let templates = [
+      { id: 't1', name: 'NDA Agreement', fields: [{ leftPercent: 35, topPercent: 55 }, { leftPercent: 65, topPercent: 55 }], signerCount: 2 },
+      { id: 't2', name: 'Sales Contract', fields: [{ leftPercent: 40, topPercent: 70 }, { leftPercent: 60, topPercent: 70 }], signerCount: 2 },
+      { id: 't3', name: 'Service Agreement', fields: [{ leftPercent: 45, topPercent: 65 }], signerCount: 1 }
+    ];
+    
+    let reminderSettings = { enabled: false, daysBefore: 3, expirationDays: 7, reminderSent: false };
+    let expirationTimer = null;
+    let bulkQueue = [];
+    /** Dashboard document sidebar: documents | waiting_me | waiting_others | signed */
+    let dashboardSidebarSection = 'documents';
+    /** Active signer for fields dropped from the editor palette */
+    let dashboardActiveSignerId = null;
+    /** Subscriber dashboard main area: workspace | referrals */
+    let dashboardMainTab = 'workspace';
+    /** Filters demo document list in Document Workspace */
+    let dashboardEnvelopeSearch = '';
+    /** Pricing UI billing cycle: yearly | monthly */
+    let pricingBillingCycle = 'yearly';
+    /** Home AI FAQ messages (simple local assistant) */
+    let aiFaqHistory = [];
+    /** Holds last generated template draft before user applies */
+    let aiGeneratedTemplateDraft = null;
+    
+    function setActivePage(page, pushState = true) {
+      if (!page || !KNOWN_PAGES.has(page)) page = 'home';
+      activePage = page;
+      renderApp();
+      if (pushState) window.history.pushState({ page }, '', `#${page}`);
+      window.scrollTo(0, 0);
+    }
+
+    function generateAffiliateCode() {
+      return 'SF-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+    }
+
+    function getAffiliateTier(referralCount) {
+      if (referralCount >= 50) return { name: 'Platinum', commission: 30, color: 'tier-platinum' };
+      if (referralCount >= 15) return { name: 'Gold', commission: 25, color: 'tier-gold' };
+      if (referralCount >= 5) return { name: 'Silver', commission: 22, color: 'tier-silver' };
+      return { name: 'Bronze', commission: 20, color: 'tier-bronze' };
+    }
+
+    function getTierFromApiName(name) {
+      const n = String(name || '').toLowerCase();
+      if (n === 'platinum') return { name: 'Platinum', commission: 30, color: 'tier-platinum' };
+      if (n === 'gold') return { name: 'Gold', commission: 25, color: 'tier-gold' };
+      if (n === 'silver') return { name: 'Silver', commission: 22, color: 'tier-silver' };
+      return { name: 'Bronze', commission: 20, color: 'tier-bronze' };
+    }
+
+    async function fetchReferralStatsFromApi() {
+      const totalEl = document.getElementById('dash-api-total-referrals');
+      const activeEl = document.getElementById('dash-api-active-accounts');
+      const payoutEl = document.getElementById('dash-api-expected-payout');
+      const tierBadge = document.getElementById('dash-api-tier-badge');
+      if (!totalEl || !activeEl || !payoutEl || !tierBadge) return;
+      const url = (REFERRALS_API_BASE ? REFERRALS_API_BASE + '/api/referrals' : '/api/referrals');
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(String(res.status));
+        const data = await res.json();
+        const total = Number(data.totalReferrals);
+        const active = Number(data.activeAccounts);
+        const expectedRaw = Number(data.expectedPayout);
+        const expected = Number.isFinite(expectedRaw) ? expectedRaw : 0;
+        dashboardExpectedPayout = expected;
+        const tierInfo = getTierFromApiName(data.tier);
+        totalEl.textContent = String(Number.isFinite(total) ? total : 0);
+        activeEl.textContent = String(Number.isFinite(active) ? active : 0);
+        payoutEl.textContent = '$' + expected.toFixed(2);
+        tierBadge.textContent = tierInfo.name + ' (' + tierInfo.commission + '% commission)';
+        tierBadge.className = 'px-3 py-1 rounded-full text-white text-sm ' + tierInfo.color;
+      } catch (err) {
+        dashboardExpectedPayout = 0;
+        totalEl.textContent = '—';
+        activeEl.textContent = '—';
+        payoutEl.textContent = '—';
+        tierBadge.textContent = 'Could not load';
+        tierBadge.className = 'px-3 py-1 rounded-full text-white text-sm bg-gray-400';
+      }
+    }
+
+    function getWithdrawableAffiliateBalance() {
+      if (Number.isFinite(dashboardExpectedPayout) && dashboardExpectedPayout > 0) return dashboardExpectedPayout;
+      const fallback = Number(currentUser?.referralEarnings);
+      return Number.isFinite(fallback) ? fallback : 0;
+    }
+
+    function getWithdrawalEligibility() {
+      const amount = getWithdrawableAffiliateBalance();
+      const isPayoutDay = new Date().getDate() === 15;
+      const meetsMinimum = amount >= MIN_AFFILIATE_WITHDRAWAL;
+      let reason = '';
+      if (!isPayoutDay) reason = 'Withdrawals are available on the 15th of each month.';
+      else if (!meetsMinimum) reason = `Minimum withdrawal is $${MIN_AFFILIATE_WITHDRAWAL}.`;
+      return { amount, isPayoutDay, meetsMinimum, eligible: isPayoutDay && meetsMinimum, reason };
+    }
+
+    function startStripeConnectFlow() {
+      if (!currentUser) return;
+      stripeConnectStep = 'pending';
+      addAudit('Stripe payout setup started. Confirm connection to finish.');
+      renderApp();
+    }
+
+    function confirmStripeConnectFlow() {
+      if (!currentUser) return;
+      if (stripeConnectStep !== 'pending') {
+        alert('Start Stripe setup first.');
+        return;
+      }
+      stripeConnectStep = 'connected';
+      currentUser.stripeConnected = true;
+      addAudit('Stripe account connected for affiliate payouts.');
+      alert('Stripe connected successfully. You can request payouts when eligible.');
+      renderApp();
+    }
+
+    function requestAffiliateWithdrawal() {
+      if (!currentUser) return;
+      if (!currentUser.stripeConnected) {
+        alert('Connect Stripe first to receive payouts.');
+        return;
+      }
+      const status = getWithdrawalEligibility();
+      if (!status.eligible) {
+        alert(status.reason || 'Withdrawal not available yet.');
+        return;
+      }
+      const amount = status.amount;
+      currentUser.referralEarnings = Number((currentUser.referralEarnings + amount).toFixed(2));
+      dashboardExpectedPayout = 0;
+      addAudit(`Affiliate payout requested: $${amount.toFixed(2)} via Stripe.`);
+      alert(`Withdrawal request submitted for $${amount.toFixed(2)}. Funds will be processed to Stripe.`);
+      renderApp();
+    }
+
+    // 3-Year Revenue Projection — new referrals Y1=36, Y2=84, Y3=144; earnings scaled from prior model (same commission assumptions)
+    const revenueProjection = {
+      year1: { newReferrals: 36, totalReferrals: 36, earnings: 1190, avgMonthly: 99, endMonthly: 186 },
+      year2: { newReferrals: 84, totalReferrals: 120, earnings: 8686, avgMonthly: 724, endMonthly: 1012 },
+      year3: { newReferrals: 144, totalReferrals: 264, earnings: 30317, avgMonthly: 2526, endMonthly: 3294 },
+      total: { referrals: 264, earnings: 40193 }
+    };
+
+    function handleSignup(email, password, plan = 'free', referrerCode = null) {
+      if (!email) return false;
+      const affiliateCode = generateAffiliateCode();
+      currentUser = { 
+        email, plan: plan, 
+        docsRemaining: (plan === 'free' ? FREE_TIER_LIMIT : (plan === 'unlimited' ? PRO_MONTHLY_LIMIT : Infinity)), 
+        documentsSigned: 0,
+        monthlyDocCount: 0,
+        affiliateCode: affiliateCode,
+        referralEarnings: 0,
+        referralCount: 0,
+        paidReferrals: 0,
+        planType: plan,
+        stripeConnected: false
+      };
+      signatureFields = [];
+      signers = [{ id: "s1", name: currentUser.email.split('@')[0], email: currentUser.email }];
+      dashboardActiveSignerId = signers[0].id;
+      auditLog = [];
+      monthlyDocumentCount = 0;
+      affiliateReferrals = [];
+      
+      if (referrerCode) addAudit(`🎉 Signed up via affiliate link: ${referrerCode}`);
+      addAudit(`Welcome ${currentUser.email}! Join the affiliate program to earn 20-30% recurring commissions.`);
+      setActivePage('dashboard');
+      return true;
+    }
+
+    function handleLogin(email) {
+      if (!email) return false;
+      currentUser = { 
+        email, plan: 'free', docsRemaining: FREE_TIER_LIMIT, documentsSigned: 0, monthlyDocCount: 0,
+        affiliateCode: generateAffiliateCode(),
+        referralEarnings: 0,
+        referralCount: 0,
+        paidReferrals: 0,
+        planType: 'free',
+        stripeConnected: false
+      };
+      signers = [{ id: "s1", name: email.split('@')[0], email }];
+      dashboardActiveSignerId = signers[0].id;
+      signatureFields = [];
+      auditLog = [];
+      monthlyDocumentCount = 0;
+      affiliateReferrals = [];
+      addAudit(`Logged in as ${email}. Start sharing your affiliate link to earn!`);
+      setActivePage('dashboard');
+      return true;
+    }
+
+    function loadSampleAffiliateData() {
+      if (currentUser) {
+        currentUser.referralCount = 3;
+        currentUser.paidReferrals = 2;
+        currentUser.referralEarnings = 11.60;
+        dashboardExpectedPayout = 11.60;
+        affiliateReferrals = [
+          { email: "john@example.com", status: "active", plan: "Pro", date: "2026-03-15", earnings: 5.80 },
+          { email: "jane@example.com", status: "active", plan: "Pro", date: "2026-03-20", earnings: 5.80 },
+          { email: "bob@example.com", status: "pending", plan: null, date: "2026-04-01", earnings: 0 }
+        ];
+        addAudit("Sample affiliate data loaded. See projected earnings below!");
+        renderDashboardContent();
+      }
+    }
+
+    function handleLogout() {
+      if (expirationTimer) clearTimeout(expirationTimer);
+      currentUser = null;
+      signatureFields = [];
+      signers = [];
+      dashboardActiveSignerId = null;
+      auditLog = [];
+      addFieldMode = false;
+      dashboardSidebarSection = 'documents';
+      dashboardMainTab = 'workspace';
+      dashboardEnvelopeSearch = '';
+      aiGeneratedTemplateDraft = null;
+      dashboardExpectedPayout = 0;
+      stripeConnectStep = 'idle';
+      setActivePage('home');
+    }
+
+    function upgradeToUnlimited() {
+      if (!currentUser) return;
+      currentUser.plan = 'unlimited';
+      currentUser.planType = 'unlimited';
+      currentUser.docsRemaining = PRO_MONTHLY_LIMIT;
+      currentUser.monthlyDocCount = 0;
+      addAudit(`✨ UPGRADED to Pro Plan: Unlimited documents, 1 sender, templates, branding, and signing links.`);
+      alert(`Thank you! You are now on the Pro Plan.`);
+      renderApp();
+    }
+
+    function upgradeToEnterprise() {
+      if (!currentUser) return;
+      currentUser.plan = 'enterprise';
+      currentUser.planType = 'enterprise';
+      currentUser.docsRemaining = Infinity;
+      addAudit(`🏢 UPGRADED to Enterprise plan ($499/mo): Unlimited documents.`);
+      alert('Enterprise plan activated!');
+      renderApp();
+    }
+
+    function upgradeToPremium() {
+      if (!currentUser) return;
+      currentUser.plan = 'premium';
+      currentUser.planType = 'premium';
+      currentUser.docsRemaining = Infinity;
+      currentUser.monthlyDocCount = 0;
+      addAudit('💎 UPGRADED to Premium plan: Unlimited documents, up to 5 senders, advanced features.');
+      alert('Premium plan activated!');
+      renderApp();
+    }
+
+    function addAudit(message, type = 'info') {
+      const entry = { timestamp: new Date().toLocaleString(), message, type };
+      auditLog.unshift(entry);
+      if (activePage === 'dashboard') renderDashboardContent();
+    }
+
+    function genId() { return Date.now() + '-' + Math.random().toString(36).substr(2, 6); }
+    function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+
+    function checkFairUseLimit() {
+      if (!currentUser) return true;
+      if (currentUser.planType === 'enterprise') return true;
+      if (currentUser.planType === 'premium') return true;
+      if (currentUser.planType === 'unlimited') return true;
+      if (currentUser.planType === 'free') {
+        if (currentUser.docsRemaining <= 0) {
+          addAudit(`⚠️ Free tier limit reached (${FREE_TIER_LIMIT} documents).`, "warn");
+          alert(`You have used your ${FREE_TIER_LIMIT} free documents. Upgrade to Pro.`);
+          return false;
+        }
+      }
+      return true;
+    }
+
+    function loadTemplate(templateId) {
+      const template = templates.find(t => t.id === templateId);
+      if (!template) return;
+      dashboardMainTab = 'workspace';
+      signatureFields = template.fields.map((f, idx) => ({
+        id: genId(),
+        kind: 'signature',
+        signerId: signers[idx % signers.length]?.id || signers[0]?.id,
+        leftPercent: f.leftPercent,
+        topPercent: f.topPercent,
+        signedData: null,
+        status: 'pending'
+      }));
+      addAudit(`📋 Loaded template: ${template.name}`);
+      renderDashboardContent();
+    }
+    
+    function setRemindersAndExpiration(enabled, daysBefore, expirationDays) {
+      reminderSettings = { enabled, daysBefore, expirationDays, reminderSent: false };
+      if (expirationTimer) clearTimeout(expirationTimer);
+      renderDashboardContent();
+    }
+    
+    function openBulkSendModal() {
+      if (currentUser?.planType === 'free') {
+        alert("Bulk send is available on Pro and Enterprise plans only.");
+        return;
+      }
+      const emails = prompt("Enter comma-separated email addresses for bulk send:");
+      if (!emails) return;
+      const emailList = emails.split(',').map(e => e.trim()).filter(e => e);
+      bulkQueue = emailList.map(email => ({ email, name: email.split('@')[0], status: 'pending' }));
+      addAudit(`📨 BULK SEND: Initiated to ${bulkQueue.length} recipients.`);
+      if (bulkQueue.length > 0) {
+        signers = bulkQueue.map((r, idx) => ({ id: genId(), name: r.name, email: r.email }));
+        dashboardActiveSignerId = signers[0].id;
+        renderApp();
+      }
+    }
+
+    const PALETTE_DRAG_TYPES = new Set([
+      'signature', 'sig-field', 'initials', 'initials-field', 'text', 'text-field', 'date', 'date-signed-field',
+      'checkbox', 'checkbox-field', 'checkmark', 'radio', 'radio-field', 'dropdown', 'dropdown-field',
+      'attachment', 'attachment-field', 'name', 'name-field', 'email', 'email-field', 'company', 'company-field', 'title', 'title-field'
+    ]);
+
+    function isPaletteDragPayload(raw) {
+      return PALETTE_DRAG_TYPES.has(String(raw || '').trim().toLowerCase());
+    }
+
+    function normalizePaletteKind(raw) {
+      const k = String(raw || '').toLowerCase();
+      if (k === 'sig-field' || k === 'signature') return 'signature';
+      if (k === 'initials-field' || k === 'initials') return 'initials';
+      if (k === 'text-field' || k === 'text') return 'text';
+      if (k === 'date-signed-field' || k === 'date') return 'date';
+      if (k === 'checkbox-field' || k === 'checkbox') return 'checkbox';
+      if (k === 'checkmark') return 'checkmark';
+      if (k === 'radio-field' || k === 'radio') return 'radio';
+      if (k === 'dropdown-field' || k === 'dropdown') return 'dropdown';
+      if (k === 'attachment-field' || k === 'attachment') return 'attachment';
+      if (k === 'name-field' || k === 'name') return 'name';
+      if (k === 'email-field' || k === 'email') return 'email';
+      if (k === 'company-field' || k === 'company') return 'company';
+      if (k === 'title-field' || k === 'title') return 'title';
+      return 'signature';
+    }
+
+    const ASSIGN_VALUE_KINDS = ['text', 'name', 'email', 'company', 'title'];
+
+    function fieldIsCompleteForSend(field) {
+      const kind = field.kind || 'signature';
+      if (kind === 'date') return !!field.signedData;
+      if (ASSIGN_VALUE_KINDS.includes(kind)) {
+        return !!(field.signedData && field.signedData.type === kind && String(field.signedData.value || '').trim());
+      }
+      if (kind === 'checkbox') return !!(field.signedData && field.signedData.type === 'checkbox' && field.signedData.checked);
+      if (kind === 'checkmark') return !!(field.signedData && field.signedData.type === 'check' && field.signedData.done);
+      if (kind === 'radio') return !!(field.signedData && field.signedData.type === 'radio' && field.signedData.choice);
+      if (kind === 'dropdown') return !!(field.signedData && field.signedData.type === 'dropdown' && String(field.signedData.value || '').trim());
+      if (kind === 'attachment') return !!(field.signedData && field.signedData.type === 'attachment' && String(field.signedData.fileName || '').trim());
+      if (kind === 'signature' || kind === 'initials') return !!field.signedData;
+      return !!field.signedData;
+    }
+
+    function addDocumentFieldAt(xPercent, yPercent, paletteKind) {
+      if (!signers.length) {
+        alert('Add at least one signer before placing fields on the document.');
+        return false;
+      }
+      const kind = normalizePaletteKind(paletteKind);
+      let signerId = dashboardActiveSignerId && signers.some(s => s.id === dashboardActiveSignerId) ? dashboardActiveSignerId : signers[0].id;
+      const leftPercent = Math.min(92, Math.max(4, xPercent));
+      const topPercent = Math.min(92, Math.max(4, yPercent));
+      const base = { id: genId(), kind, signerId, leftPercent, topPercent, status: 'pending' };
+      let newField;
+      if (kind === 'date') {
+        newField = { ...base, signedData: { type: 'date', value: new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) } };
+      } else if (kind === 'checkbox') {
+        newField = { ...base, signedData: { type: 'checkbox', checked: false } };
+      } else if (kind === 'radio') {
+        newField = { ...base, signedData: { type: 'radio', choice: null } };
+      } else {
+        newField = { ...base, signedData: null };
+      }
+      signatureFields.push(newField);
+      addAudit(`➕ Placed ${kind.replace(/-/g, ' ')} on document`);
+      renderDashboardContent();
+      return true;
+    }
+
+    function addSignatureFieldAt(xPercent, yPercent) {
+      if (!addFieldMode) return false;
+      return addDocumentFieldAt(xPercent, yPercent, 'signature');
+    }
+
+    function renderFieldsOnDocument(containerElement) {
+      if (!containerElement) return;
+      containerElement.innerHTML = '';
+      signatureFields.forEach(field => {
+        const kind = field.kind || 'signature';
+        const signerObj = signers.find(s => s.id === field.signerId) || signers[0];
+        const complete = fieldIsCompleteForSend(field);
+        const fieldDiv = document.createElement('div');
+        fieldDiv.dataset.fieldId = field.id;
+        fieldDiv.className = `signature-field ${complete ? 'signed' : ''} absolute pointer-events-auto flex flex-col items-center justify-center`;
+        fieldDiv.style.left = `${field.leftPercent}%`;
+        fieldDiv.style.top = `${field.topPercent}%`;
+        fieldDiv.style.transform = 'translate(-50%, -50%)';
+        if (ASSIGN_VALUE_KINDS.includes(kind) || kind === 'dropdown' || kind === 'attachment') fieldDiv.style.minWidth = '112px';
+        else if (kind === 'radio') fieldDiv.style.minWidth = '104px';
+        else if (kind === 'checkbox' || kind === 'checkmark') fieldDiv.style.minWidth = '72px';
+        else fieldDiv.style.minWidth = '130px';
+
+        let contentHtml = '';
+        let extraControls = '';
+        const assignTitles = { text: 'Text', name: 'Name', email: 'Email', company: 'Company', title: 'Title' };
+
+        if (ASSIGN_VALUE_KINDS.includes(kind)) {
+          const hasVal = field.signedData && field.signedData.type === kind && String(field.signedData.value || '').trim();
+          const val = hasVal ? escapeHtml(field.signedData.value) : '';
+          const lab = assignTitles[kind] || 'Field';
+          contentHtml = val
+            ? `<div class="text-xs text-green-700 font-semibold">${escapeHtml(lab)}</div><div class="text-[11px] px-1 break-words">${val}</div>`
+            : `<div class="text-xs font-semibold text-amber-700">${escapeHtml(lab)}</div><div class="text-[10px] text-gray-500">Click pencil to fill</div>`;
+          extraControls = !val ? `<button type="button" class="fill-assign-field-btn text-blue-600 hover:bg-blue-100 rounded-full w-5 h-5 flex items-center justify-center" data-id="${field.id}" title="Fill"><i class="fas fa-edit"></i></button>` : '';
+        } else if (kind === 'date' && field.signedData && field.signedData.type === 'date') {
+          contentHtml = `<div class="text-[10px] text-gray-500">Date signed</div><div class="text-xs font-semibold text-slate-800">${escapeHtml(field.signedData.value)}</div>`;
+        } else if (kind === 'checkbox') {
+          const checked = !!(field.signedData && field.signedData.checked);
+          contentHtml = `<div class="text-[10px] text-gray-500">Checkbox</div><button type="button" class="toggle-checkbox-field text-2xl leading-none" data-id="${field.id}">${checked ? '☑️' : '☐'}</button>`;
+        } else if (kind === 'checkmark') {
+          const done = !!(field.signedData && field.signedData.done);
+          contentHtml = `<div class="text-[10px] text-gray-500">Acknowledge</div><button type="button" class="toggle-checkmark-field text-2xl leading-none" data-id="${field.id}">${done ? '✅' : '⬜'}</button>`;
+        } else if (kind === 'radio') {
+          const ch = field.signedData && field.signedData.type === 'radio' ? field.signedData.choice : null;
+          const btnLabel = !ch ? 'Tap to choose' : ch === 'A' ? 'Option A ✓' : 'Option B ✓';
+          contentHtml = `<div class="text-[10px] text-gray-500">Radio buttons</div><button type="button" class="toggle-radio-field w-full max-w-[120px] border border-dashed border-blue-300 rounded-lg px-2 py-1.5 text-xs font-medium text-blue-800 hover:bg-blue-50" data-id="${field.id}">${escapeHtml(btnLabel)}</button>`;
+        } else if (kind === 'dropdown') {
+          const hasVal = field.signedData && field.signedData.type === 'dropdown' && String(field.signedData.value || '').trim();
+          const val = hasVal ? escapeHtml(field.signedData.value) : '';
+          contentHtml = val
+            ? `<div class="text-xs text-green-700 font-semibold">Dropdown</div><div class="text-[11px]">${val}</div>`
+            : `<div class="text-xs font-semibold text-amber-700">Dropdown</div><div class="text-[10px] text-gray-500">Choose a value</div>`;
+          extraControls = !val ? `<button type="button" class="fill-dropdown-field-btn text-blue-600 hover:bg-blue-100 rounded-full w-5 h-5 flex items-center justify-center" data-id="${field.id}" title="Set value"><i class="fas fa-list"></i></button>` : '';
+        } else if (kind === 'attachment') {
+          const fn = field.signedData && field.signedData.type === 'attachment' ? field.signedData.fileName : '';
+          contentHtml = fn
+            ? `<div class="text-xs text-green-700 font-semibold">Attachment</div><div class="text-[10px] truncate max-w-[120px]">${escapeHtml(fn)}</div>`
+            : `<div class="text-xs font-semibold text-amber-700">Attachment</div><div class="text-[10px] text-gray-500">Add file</div>`;
+          extraControls = !fn ? `<button type="button" class="attach-field-btn text-blue-600 hover:bg-blue-100 rounded-full w-5 h-5 flex items-center justify-center" data-id="${field.id}" title="Attach"><i class="fas fa-paperclip"></i></button>` : '';
+        } else {
+          const isSigned = !!(field.signedData && (field.signedData.type === 'typed' || field.signedData.type === 'draw'));
+          if (isSigned) {
+            if (field.signedData.type === 'typed') contentHtml = `<div class="text-xs text-green-700 font-semibold">${kind === 'initials' ? '✓ Initials' : '✓ Signed'}</div><div class="text-sm" style="font-family: 'Brush Script MT', cursive;">${field.signedData.html}</div>`;
+            else if (field.signedData.type === 'draw') contentHtml = `<div class="text-xs text-green-600">${kind === 'initials' ? '✍️ Initials' : '✍️ Signature'}</div><img src="${field.signedData.imgData}" style="max-height: 40px; max-width: 110px;" alt="" />`;
+          } else {
+            contentHtml = `<div class="text-xs font-semibold text-gray-500">${kind === 'initials' ? '✏️ Initials' : '🔏 Signature'}</div><div class="text-[11px]">${escapeHtml(signerObj.name)}</div>`;
+            extraControls = `<button class="sign-field-btn text-blue-600 hover:bg-blue-100 rounded-full w-5 h-5 flex items-center justify-center" data-id="${field.id}"><i class="fas fa-pen"></i></button>`;
+          }
+        }
+
+        const showDelete = true;
+        fieldDiv.innerHTML = `<div class="flex justify-between w-full items-center gap-1 text-[10px] mb-1"><span class="bg-gray-200 px-1 rounded max-w-[72px] truncate">${escapeHtml((signerObj.name || '').split(' ')[0])}</span><div class="flex gap-1">${extraControls}${showDelete ? `<button type="button" class="delete-field-btn text-red-400 hover:text-red-700 rounded-full w-5 h-5 flex items-center justify-center" data-id="${field.id}"><i class="fas fa-times"></i></button>` : ''}</div></div><div class="text-center w-full">${contentHtml}</div>`;
+        containerElement.appendChild(fieldDiv);
+      });
+      document.querySelectorAll('.sign-field-btn').forEach(btn => btn.addEventListener('click', (e) => { e.stopPropagation(); openSignatureModal(btn.getAttribute('data-id')); }));
+      document.querySelectorAll('.delete-field-btn').forEach(btn => btn.addEventListener('click', (e) => { e.stopPropagation(); deleteFieldById(btn.getAttribute('data-id')); }));
+      document.querySelectorAll('.fill-assign-field-btn').forEach(btn => btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.getAttribute('data-id');
+        const f = signatureFields.find(x => x.id === id);
+        if (!f || !ASSIGN_VALUE_KINDS.includes(f.kind)) return;
+        const prompts = { text: 'Text for this field', name: 'Full name', email: 'Email address', company: 'Company name', title: 'Job title' };
+        const prev = (f.signedData && f.signedData.value) || '';
+        const v = prompt((prompts[f.kind] || 'Value') + ':', prev);
+        if (v === null) return;
+        const t = v.trim();
+        if (!t) { alert('Enter a value for this field.'); return; }
+        f.signedData = { type: f.kind, value: t };
+        addAudit('✏️ Updated ' + f.kind + ' field');
+        renderDashboardContent();
+        checkDocumentCompletion();
+      }));
+      document.querySelectorAll('.fill-dropdown-field-btn').forEach(btn => btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.getAttribute('data-id');
+        const f = signatureFields.find(x => x.id === id);
+        if (!f || f.kind !== 'dropdown') return;
+        const v = prompt('Dropdown value:', (f.signedData && f.signedData.value) || '');
+        if (v === null) return;
+        const t = v.trim();
+        if (!t) { alert('Enter a dropdown option.'); return; }
+        f.signedData = { type: 'dropdown', value: t };
+        renderDashboardContent();
+        checkDocumentCompletion();
+      }));
+      document.querySelectorAll('.attach-field-btn').forEach(btn => btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.getAttribute('data-id');
+        const f = signatureFields.find(x => x.id === id);
+        if (!f || f.kind !== 'attachment') return;
+        f.signedData = { type: 'attachment', fileName: 'attachment-' + String(f.id).slice(-6) + '.pdf' };
+        addAudit('📎 Attachment linked (preview)');
+        renderDashboardContent();
+        checkDocumentCompletion();
+      }));
+      document.querySelectorAll('.toggle-radio-field').forEach(btn => btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.getAttribute('data-id');
+        const f = signatureFields.find(x => x.id === id);
+        if (!f || !f.signedData || f.signedData.type !== 'radio') return;
+        const cur = f.signedData.choice;
+        f.signedData.choice = cur == null ? 'A' : cur === 'A' ? 'B' : 'A';
+        renderDashboardContent();
+        checkDocumentCompletion();
+      }));
+      document.querySelectorAll('.toggle-checkbox-field').forEach(btn => btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.getAttribute('data-id');
+        const f = signatureFields.find(x => x.id === id);
+        if (!f || !f.signedData || f.signedData.type !== 'checkbox') return;
+        f.signedData.checked = !f.signedData.checked;
+        renderDashboardContent();
+        checkDocumentCompletion();
+      }));
+      document.querySelectorAll('.toggle-checkmark-field').forEach(btn => btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.getAttribute('data-id');
+        const f = signatureFields.find(x => x.id === id);
+        if (!f) return;
+        f.signedData = { type: 'check', done: true };
+        renderDashboardContent();
+        checkDocumentCompletion();
+      }));
+    }
+
+    function deleteFieldById(id) { signatureFields = signatureFields.filter(f => f.id !== id); addAudit(`Removed signature field`); renderDashboardContent(); }
+
+    function openSignatureModal(fieldId) {
+      const field = signatureFields.find(f => f.id === fieldId);
+      const kind = field && (field.kind || 'signature');
+      if (!field || (kind !== 'signature' && kind !== 'initials')) return;
+      if (field.signedData) return;
+      currentFieldIdForModal = fieldId;
+      const signer = signers.find(s => s.id === field.signerId) || signers[0];
+      document.getElementById('modalSignerName').innerText = signer.name;
+      document.getElementById('typedSignatureInput').value = signer.name;
+      if (canvasCtx && canvasEl) { canvasCtx.clearRect(0, 0, canvasEl.width, canvasEl.height); canvasCtx.fillStyle = "white"; canvasCtx.fillRect(0, 0, canvasEl.width, canvasEl.height); currentDrawDataUrl = null; }
+      document.getElementById('signatureModal').classList.remove('hidden');
+    }
+
+    function signFieldWithTyped() {
+      if (!currentFieldIdForModal) return;
+      const field = signatureFields.find(f => f.id === currentFieldIdForModal);
+      if (!field) return;
+      const typedValue = document.getElementById('typedSignatureInput').value.trim();
+      if (!typedValue) return alert("Enter signature");
+      field.signedData = { type: 'typed', html: typedValue };
+      addAudit(`✍️ Signed`);
+      closeModal();
+      renderDashboardContent();
+      checkDocumentCompletion();
+    }
+
+    function signFieldWithDraw() {
+      if (!currentFieldIdForModal) return;
+      const field = signatureFields.find(f => f.id === currentFieldIdForModal);
+      if (!field || !currentDrawDataUrl) return alert("Draw signature first");
+      field.signedData = { type: 'draw', imgData: currentDrawDataUrl };
+      addAudit(`🖌️ Drew signature`);
+      closeModal();
+      renderDashboardContent();
+      checkDocumentCompletion();
+    }
+
+    function checkDocumentCompletion() {
+      if (!currentUser) return;
+      const allSigned = signatureFields.length > 0 && signatureFields.every(fieldIsCompleteForSend);
+      if (allSigned && signatureFields.length) {
+        if (!checkFairUseLimit()) return;
+        if (currentUser.plan === 'free') {
+          currentUser.docsRemaining--;
+          addAudit(`📄 Document signed! Free tier: ${currentUser.docsRemaining} of ${FREE_TIER_LIMIT} remaining.`);
+          if (currentUser.docsRemaining === 0) alert(`You've used all ${FREE_TIER_LIMIT} free documents! Upgrade to Pro.`);
+        } else if (currentUser.plan === 'unlimited') {
+          currentUser.monthlyDocCount++;
+          currentUser.docsRemaining = PRO_MONTHLY_LIMIT - currentUser.monthlyDocCount;
+          addAudit(`📄 Document signed. Monthly usage: ${currentUser.monthlyDocCount}/${PRO_MONTHLY_LIMIT}.`);
+        } else if (currentUser.plan === 'enterprise') {
+          addAudit(`📄 Document signed (Enterprise Plan).`);
+        } else if (currentUser.plan === 'premium') {
+          addAudit(`📄 Document signed (Premium Plan).`);
+        }
+      }
+    }
+
+    function closeModal() { document.getElementById('signatureModal')?.classList.add('hidden'); currentFieldIdForModal = null; }
+
+    function openAiAgreementModal() {
+      document.getElementById('aiAgreementModal')?.classList.remove('hidden');
+      document.getElementById('aiAgreementInput')?.focus();
+    }
+
+    function closeAiAgreementModal() {
+      document.getElementById('aiAgreementModal')?.classList.add('hidden');
+      const st = document.getElementById('aiAgreementStatus');
+      if (st) st.textContent = '';
+    }
+
+    function analyzeAgreementHeuristic(text) {
+      const t = text.toLowerCase();
+      const wc = text.trim().split(/\s+/).filter(Boolean).length;
+      const bullets = [];
+      const push = (type, msg) => bullets.push({ type, msg });
+
+      if (wc < 40) push('warn', 'Text is quite short — paste the full section or agreement for a stronger review.');
+      if (t.includes('confidential') || t.includes('non-disclosure') || t.includes(' proprietary')) push('ok', 'Confidentiality / proprietary language detected — confirm term length and return-of-materials match your risk.');
+      if (t.includes('nda') || t.includes('non disclosure')) push('ok', 'Reads like an NDA — verify mutual vs one-way obligations and carve-outs (legal counsel, public info).');
+      if (!t.includes('terminat') && !t.includes('expir')) push('warn', 'Termination or expiration language is not obvious — add clear end dates or notice to exit.');
+      if (!t.includes('liabilit') && !t.includes('limitation of liability')) push('warn', 'Liability cap or exclusion section not spotted — consider caps, consequential damages, and insurance expectations.');
+      if (!t.includes('indemnif')) push('warn', 'Indemnity clause not clearly identified — define scope, procedure, and survival if disputes arise.');
+      if (t.includes('governing law') || t.includes('jurisdiction')) push('ok', 'Dispute resolution / governing law references found — confirm venue works for all parties.');
+      if (t.includes('payment') || t.includes('fee') || t.includes('invoice')) push('ok', 'Payment terms appear — align with tax, currency, late fees, and refund policy.');
+      if (t.includes('intellectual property') || t.includes(' ip ') || t.includes('work for hire')) push('ok', 'IP / ownership language present — double-check assignment vs license scope.');
+      if (t.includes('data') && (t.includes('gdpr') || t.includes('privacy'))) push('ok', 'Data / privacy references found — map to your DPA and subprocessors list.');
+      if (t.includes('warrant') && !t.includes('disclaimer')) push('warn', 'Warranties appear — balance with disclaimers "as is" where appropriate.');
+      if (t.includes('signature') || t.includes('executed')) push('ok', 'Execution / signature block language detected — ensure counterparties and dates are complete before send.');
+      if (bullets.filter(b => b.type === 'warn').length === 0 && wc >= 80) push('ok', 'No major red flags from quick scan — still have counsel review before binding use.');
+
+      let docType = 'General agreement';
+      if (t.includes('employment') || t.includes('offer letter')) docType = 'Employment / offer';
+      else if (t.includes('saas') || t.includes('subscription') || t.includes('service level')) docType = 'SaaS / subscription';
+      else if (t.includes('master service') || t.includes('msa')) docType = 'Master services';
+      else if (t.includes('non-disclosure') || t.includes('confidentiality')) docType = 'Confidentiality (NDA)';
+
+      const checklist = [
+        'Parties, roles, and effective date are explicit',
+        'Commercial terms (fees, term, renewal) match the deal you discussed',
+        'Data protection & security obligations fit your stack',
+        'Termination, suspension, and post-termination duties are clear',
+        'Notice addresses and e-sign / counterpart execution rules are correct'
+      ];
+
+      return { wordCount: wc, docType, bullets, checklist };
+    }
+
+    function formatAiAgreementHtml(result) {
+      const warns = result.bullets.filter(b => b.type === 'warn');
+      const oks = result.bullets.filter(b => b.type === 'ok');
+      const li = (arr) => arr.map(b => `<li>${escapeHtml(b.msg)}</li>`).join('');
+      return `<p class="text-sm text-slate-700"><span class="ai-chip ai-chip-ok">Model</span>Heuristic scan (instant). Word count: <strong>${result.wordCount}</strong> · Detected pattern: <strong>${escapeHtml(result.docType)}</strong></p>
+        <h4>Executive summary</h4>
+        <p>This draft was scanned for common agreement risk patterns. Use it to prepare questions for legal review—not as legal advice.</p>
+        ${warns.length ? `<h4>Attention items</h4><ul>${li(warns)}</ul>` : ''}
+        ${oks.length ? `<h4>Detected strengths / topics</h4><ul>${li(oks)}</ul>` : ''}
+        <h4>Send readiness checklist</h4>
+        <ul>${result.checklist.map(c => `<li>${escapeHtml(c)}</li>`).join('')}</ul>`;
+    }
+
+    async function runAiAgreementAnalysis() {
+      const ta = document.getElementById('aiAgreementInput');
+      const out = document.getElementById('aiAgreementOutput');
+      const status = document.getElementById('aiAgreementStatus');
+      const raw = ta && ta.value ? ta.value.trim() : '';
+      if (!out) return;
+      if (!raw) {
+        out.innerHTML = '<p class="text-amber-700 text-sm">Paste agreement or clause text first.</p>';
+        return;
+      }
+      const apiBase = typeof window.SIGNPROZ_AI_AGREEMENT_API === 'string' ? window.SIGNPROZ_AI_AGREEMENT_API.replace(/\/+$/, '') : '';
+      if (apiBase) {
+        if (status) status.textContent = 'Calling your AI API…';
+        try {
+          const res = await fetch(apiBase + '/api/agreement-analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: raw })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data && typeof data.html === 'string') {
+              out.innerHTML = data.html;
+              if (status) status.textContent = '';
+              addAudit('🤖 AI agreement review (API) completed.');
+              return;
+            }
+          }
+        } catch (err) {
+          if (status) status.textContent = 'API error — using built-in scan.';
+        }
+      }
+      if (status) status.textContent = '';
+      out.innerHTML = formatAiAgreementHtml(analyzeAgreementHeuristic(raw));
+      addAudit('🤖 AI agreement review (built-in) completed.');
+    }
+
+    function openAiFaqModal(seedQuestion) {
+      const modal = document.getElementById('aiFaqModal');
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      const input = document.getElementById('aiFaqInput');
+      if (input) input.focus();
+      if (aiFaqHistory.length === 0) {
+        aiFaqHistory.push({
+          role: 'bot',
+          text: 'Hi! I can answer SignProz product FAQs: plans, integrations, API, compliance, and sending workflows.'
+        });
+      }
+      if (seedQuestion) {
+        const q = String(seedQuestion).trim();
+        if (q) {
+          aiFaqHistory.push({ role: 'user', text: q });
+          aiFaqHistory.push({ role: 'bot', text: answerAiFaqQuestion(q) });
+        }
+      }
+      renderAiFaqMessages();
+    }
+
+    function closeAiFaqModal() {
+      document.getElementById('aiFaqModal')?.classList.add('hidden');
+    }
+
+    function answerAiFaqQuestion(question) {
+      const q = String(question || '').toLowerCase();
+      if (q.includes('commission') || q.includes('affiliate') || q.includes('reward')) {
+        return 'SignProz affiliate rewards are recurring commissions on qualified paid referrals.\n- Bronze: 20%\n- Silver: 22%\n- Gold: 25%\n- Platinum: 30%\nPayouts are monthly, with tracking visible inside your dashboard.';
+      }
+      if (q.includes('integrat') || q.includes('microsoft') || q.includes('crm') || q.includes('api')) {
+        return 'SignProz supports API-driven workflows and integration-friendly architecture.\nKey areas include Microsoft 365, Sales CRM integrations, 400+ connected apps via automation tools, and an affordable API for custom workflows.';
+      }
+      if (q.includes('hipaa') || q.includes('compliance') || q.includes('security')) {
+        return 'For HIPAA-oriented workflows, ensure BAA process, audit logging, least-privilege access, encryption at rest/in transit, and secure retention policy are enabled in your deployment.';
+      }
+      if (q.includes('bulk') || q.includes('send') || q.includes('sms')) {
+        return 'Use Bulk Sending in the subscriber portal to queue multiple recipients. You can combine email and SMS notifications, set reminders, and monitor completion status from dashboard views.';
+      }
+      if (q.includes('ai') || q.includes('template') || q.includes('document generation')) {
+        return 'Two AI flows are available in-app:\n1) AI Agreement Assistant for risk/sanity review of agreement text.\n2) AI Document / Template Generation to draft a starter template and add it to your template library.';
+      }
+      return 'SignProz includes Document Workspace, eSignature fields, affiliate rewards, integrations, API access, and AI-assisted workflows. Ask me about pricing, compliance, templates, or sending flows.';
+    }
+
+    function renderAiFaqMessages() {
+      const wrap = document.getElementById('aiFaqMessages');
+      if (!wrap) return;
+      wrap.innerHTML = aiFaqHistory.map(m => `<div class="${m.role === 'user' ? 'faq-msg-user' : 'faq-msg-bot'}">${escapeHtml(m.text)}</div>`).join('');
+      wrap.scrollTop = wrap.scrollHeight;
+    }
+
+    function submitAiFaqQuestion(rawText) {
+      const q = String(rawText || '').trim();
+      if (!q) return;
+      aiFaqHistory.push({ role: 'user', text: q });
+      aiFaqHistory.push({ role: 'bot', text: answerAiFaqQuestion(q) });
+      renderAiFaqMessages();
+      const input = document.getElementById('aiFaqInput');
+      if (input) input.value = '';
+    }
+
+    function openAiTemplateModal() {
+      document.getElementById('aiTemplateModal')?.classList.remove('hidden');
+      document.getElementById('aiTemplatePromptInput')?.focus();
+      const applyBtn = document.getElementById('aiTemplateApplyBtn');
+      if (applyBtn) applyBtn.disabled = !aiGeneratedTemplateDraft;
+    }
+
+    function closeAiTemplateModal() {
+      document.getElementById('aiTemplateModal')?.classList.add('hidden');
+      const st = document.getElementById('aiTemplateStatus');
+      if (st) st.textContent = '';
+    }
+
+    function buildGeneratedTemplateDraft(promptText) {
+      const p = String(promptText || '').trim();
+      const lower = p.toLowerCase();
+      const signerCount = /three|3/.test(lower) ? 3 : /four|4/.test(lower) ? 4 : 2;
+      const isNda = lower.includes('nda') || lower.includes('non-disclosure');
+      const isSales = lower.includes('sales') || lower.includes('proposal') || lower.includes('quote');
+      const isOffer = lower.includes('offer') || lower.includes('employment');
+      const baseName = isNda ? 'NDA' : isSales ? 'Sales Agreement' : isOffer ? 'Offer Letter' : 'Custom Agreement';
+      const name = 'AI - ' + baseName;
+      const fields = [
+        { leftPercent: 35, topPercent: 72 },
+        { leftPercent: 65, topPercent: 72 },
+        { leftPercent: 35, topPercent: 82 },
+        { leftPercent: 65, topPercent: 82 }
+      ].slice(0, Math.max(1, signerCount));
+      const checklist = [
+        'Purpose and scope',
+        'Commercial terms and payment',
+        'Term and termination',
+        'Confidentiality / data handling',
+        'Signature blocks'
+      ];
+      const summary = `Generated template: ${name}. Suggested signers: ${signerCount}.`;
+      const body = `This AI-generated starter includes sections for:\n- ${checklist.join('\n- ')}\n\nPrompt: ${p}`;
+      return { id: genId(), name, signerCount, fields, summary, body };
+    }
+
+    function runAiTemplateGeneration() {
+      const input = document.getElementById('aiTemplatePromptInput');
+      const output = document.getElementById('aiTemplateOutput');
+      const status = document.getElementById('aiTemplateStatus');
+      if (!input || !output) return;
+      const promptText = input.value.trim();
+      if (!promptText) {
+        output.innerHTML = '<p class="text-amber-700 text-sm">Describe the document/template you want first.</p>';
+        return;
+      }
+      aiGeneratedTemplateDraft = buildGeneratedTemplateDraft(promptText);
+      output.innerHTML = `<p><strong>${escapeHtml(aiGeneratedTemplateDraft.summary)}</strong></p>
+        <h4>Draft details</h4>
+        <ul>
+          <li>Template name: <strong>${escapeHtml(aiGeneratedTemplateDraft.name)}</strong></li>
+          <li>Recommended signers: <strong>${aiGeneratedTemplateDraft.signerCount}</strong></li>
+          <li>Signature field presets: <strong>${aiGeneratedTemplateDraft.fields.length}</strong></li>
+        </ul>
+        <h4>Suggested section checklist</h4>
+        <p>${escapeHtml(aiGeneratedTemplateDraft.body).replace(/\n/g, '<br>')}</p>`;
+      const applyBtn = document.getElementById('aiTemplateApplyBtn');
+      if (applyBtn) applyBtn.disabled = false;
+      if (status) status.textContent = 'Draft generated. Click "Create template" to add it.';
+    }
+
+    function applyAiTemplateDraft() {
+      if (!aiGeneratedTemplateDraft) return;
+      templates.unshift({
+        id: aiGeneratedTemplateDraft.id,
+        name: aiGeneratedTemplateDraft.name,
+        fields: aiGeneratedTemplateDraft.fields,
+        signerCount: aiGeneratedTemplateDraft.signerCount
+      });
+      addAudit('🤖 AI template created: ' + aiGeneratedTemplateDraft.name);
+      dashboardMainTab = 'workspace';
+      closeAiTemplateModal();
+      alert('AI template created and added to your template library.');
+      renderApp();
+    }
+
+    function initCanvasDrawing() {
+      canvasEl = document.getElementById('signCanvas');
+      if (!canvasEl) return;
+      canvasCtx = canvasEl.getContext('2d');
+      function resizeAndClear() { canvasEl.width = canvasEl.parentElement.clientWidth - 20; canvasEl.height = 150; canvasCtx.fillStyle = "white"; canvasCtx.fillRect(0, 0, canvasEl.width, canvasEl.height); canvasCtx.strokeStyle = "#333"; canvasCtx.lineWidth = 2; canvasCtx.lineCap = "round"; }
+      resizeAndClear(); window.addEventListener('resize', () => resizeAndClear());
+      let drawingFlag = false;
+      function getCoords(e) { const rect = canvasEl.getBoundingClientRect(); const scaleX = canvasEl.width / rect.width; const scaleY = canvasEl.height / rect.height; let clientX, clientY; if (e.touches) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; } else { clientX = e.clientX; clientY = e.clientY; } let x = (clientX - rect.left) * scaleX; let y = (clientY - rect.top) * scaleY; return { x: Math.min(Math.max(0, x), canvasEl.width), y: Math.min(Math.max(0, y), canvasEl.height) }; }
+      function start(e) { drawingFlag = true; const pos = getCoords(e); canvasCtx.beginPath(); canvasCtx.moveTo(pos.x, pos.y); canvasCtx.lineTo(pos.x, pos.y); canvasCtx.stroke(); e.preventDefault(); }
+      function draw(e) { if (!drawingFlag) return; const pos = getCoords(e); canvasCtx.lineTo(pos.x, pos.y); canvasCtx.stroke(); canvasCtx.beginPath(); canvasCtx.moveTo(pos.x, pos.y); e.preventDefault(); }
+      function stop() { drawingFlag = false; canvasCtx.beginPath(); currentDrawDataUrl = canvasEl.toDataURL(); }
+      canvasEl.addEventListener('mousedown', start); canvasEl.addEventListener('mousemove', draw); canvasEl.addEventListener('mouseup', stop); canvasEl.addEventListener('touchstart', start); canvasEl.addEventListener('touchmove', draw); canvasEl.addEventListener('touchend', stop);
+      document.getElementById('clearCanvasBtn')?.addEventListener('click', () => { canvasCtx.clearRect(0, 0, canvasEl.width, canvasEl.height); canvasCtx.fillStyle = "white"; canvasCtx.fillRect(0, 0, canvasEl.width, canvasEl.height); currentDrawDataUrl = null; });
+    }
+
+    // RENDER FUNCTIONS
+    function renderApp() {
+      const root = document.getElementById('appRoot');
+      if (!root) return;
+      const header = renderHeader();
+      let mainContent = '';
+      if (activePage === 'home') mainContent = renderHomePage();
+      else if (activePage === 'pricing') mainContent = renderPricingPage();
+      else if (activePage === 'about') mainContent = renderAboutPage();
+      else if (activePage === 'privacy') mainContent = renderPrivacyPage();
+      else if (activePage === 'terms') mainContent = renderTermsPage();
+      else if (activePage === 'login') mainContent = renderLoginPage();
+      else if (activePage === 'signup') mainContent = renderSignupPage();
+      else if (activePage === 'templates') mainContent = renderTemplatesPage();
+      else if (activePage === 'dashboard') mainContent = renderDashboard();
+      else if (activePage === 'affiliate') mainContent = renderAffiliatePage();
+      else if (activePage === 'demo') mainContent = renderDemoPage();
+      else mainContent = '<div class="max-w-lg mx-auto px-4 py-20 text-center"><p class="text-6xl font-extrabold text-gray-200">404</p><h1 class="text-xl font-semibold text-gray-800 mt-2">Page not found</h1><p class="text-gray-500 text-sm mt-2">That link is not part of SignProz.</p><button type="button" data-nav="home" class="mt-6 btn-primary text-white px-6 py-2 rounded-xl font-medium">Back to home</button></div>';
+      const footer = renderFooter();
+      root.innerHTML = `<div class="flex flex-col min-h-screen">${header} <main class="flex-grow">${mainContent}</main> ${footer}</div>`;
+      attachGlobalEvents();
+      if (activePage === 'dashboard') { initDashboardEvents(); initCanvasDrawing(); }
+      if (activePage === 'dashboard' && addFieldMode) document.getElementById('addModeBadge')?.classList.remove('hidden');
+      
+      const modal = document.getElementById('signatureModal');
+      if (modal && !modal.hasListener) { modal.hasListener = true; document.getElementById('closeModalBtn')?.addEventListener('click', closeModal); document.getElementById('applyTypedBtn')?.addEventListener('click', signFieldWithTyped); document.getElementById('applyDrawBtn')?.addEventListener('click', signFieldWithDraw); document.getElementById('typedTabBtn')?.addEventListener('click', () => { document.getElementById('typedPanel').classList.remove('hidden'); document.getElementById('drawPanel').classList.add('hidden'); }); document.getElementById('drawTabBtn')?.addEventListener('click', () => { document.getElementById('typedPanel').classList.add('hidden'); document.getElementById('drawPanel').classList.remove('hidden'); if(canvasCtx && canvasEl) canvasCtx.fillRect(0,0,canvasEl.width,canvasEl.height); }); }
+      
+      const affiliateModal = document.getElementById('affiliateModal');
+      if (affiliateModal && !affiliateModal.hasListener) {
+        affiliateModal.hasListener = true;
+        document.getElementById('closeAffiliateModalBtn')?.addEventListener('click', () => affiliateModal.classList.add('hidden'));
+        document.getElementById('closeAffiliateModalFooterBtn')?.addEventListener('click', () => affiliateModal.classList.add('hidden'));
+        affiliateModal.addEventListener('click', (e) => { if (e.target === affiliateModal) affiliateModal.classList.add('hidden'); });
+      }
+
+      const aiAgreementModal = document.getElementById('aiAgreementModal');
+      if (aiAgreementModal && !aiAgreementModal.hasListener) {
+        aiAgreementModal.hasListener = true;
+        document.getElementById('closeAiAgreementModalBtn')?.addEventListener('click', closeAiAgreementModal);
+        document.getElementById('aiAgreementRunBtn')?.addEventListener('click', () => { runAiAgreementAnalysis(); });
+        aiAgreementModal.addEventListener('click', (e) => { if (e.target === aiAgreementModal) closeAiAgreementModal(); });
+      }
+
+      const aiFaqModal = document.getElementById('aiFaqModal');
+      if (aiFaqModal && !aiFaqModal.hasListener) {
+        aiFaqModal.hasListener = true;
+        document.getElementById('closeAiFaqModalBtn')?.addEventListener('click', closeAiFaqModal);
+        document.getElementById('aiFaqSendBtn')?.addEventListener('click', () => submitAiFaqQuestion(document.getElementById('aiFaqInput')?.value));
+        document.getElementById('aiFaqInput')?.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            submitAiFaqQuestion(e.target.value);
+          }
+        });
+        aiFaqModal.querySelectorAll('.faq-quick-btn').forEach((btn) => btn.addEventListener('click', () => submitAiFaqQuestion(btn.getAttribute('data-faq-q'))));
+        aiFaqModal.addEventListener('click', (e) => { if (e.target === aiFaqModal) closeAiFaqModal(); });
+      }
+
+      const aiTemplateModal = document.getElementById('aiTemplateModal');
+      if (aiTemplateModal && !aiTemplateModal.hasListener) {
+        aiTemplateModal.hasListener = true;
+        document.getElementById('closeAiTemplateModalBtn')?.addEventListener('click', closeAiTemplateModal);
+        document.getElementById('aiTemplateRunBtn')?.addEventListener('click', runAiTemplateGeneration);
+        document.getElementById('aiTemplateApplyBtn')?.addEventListener('click', applyAiTemplateDraft);
+        aiTemplateModal.addEventListener('click', (e) => { if (e.target === aiTemplateModal) closeAiTemplateModal(); });
+      }
+    }
+
+    function renderHeader() {
+      return `<header class="bg-white/80 backdrop-blur-md border-b sticky top-0 z-30"><div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap justify-between items-center gap-3"><div class="flex items-center gap-2 flex-wrap"><div class="flex items-center gap-2 cursor-pointer" onclick="window.dispatchEvent(new CustomEvent('navigate', {detail:'home'}))"><div class="bg-gradient-to-r from-blue-600 to-indigo-700 w-9 h-9 rounded-xl flex items-center justify-center shadow"><i class="fas fa-file-signature text-white text-lg"></i></div><span class="font-bold text-xl tracking-tight"><span class="text-blue-600">Sign</span><span class="text-indigo-600">Proz</span></span></div><button type="button" data-nav="affiliate" class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full hover:bg-green-200 font-medium">Affiliate Program</button></div><div class="flex items-center gap-3 flex-wrap"><button type="button" data-nav="home" class="nav-link text-gray-600 hover:text-blue-600 text-sm font-medium">Home</button><button type="button" data-nav="pricing" class="nav-link text-gray-600 hover:text-blue-600 text-sm font-medium">Pricing</button><button type="button" data-nav="templates" class="nav-link text-gray-600 hover:text-blue-600 text-sm font-medium">Templates</button>${currentUser ? `<span class="text-sm bg-blue-50 px-3 py-1 rounded-full"><i class="fas fa-user"></i> ${currentUser.email.split('@')[0]}</span><button type="button" id="logoutBtn" class="text-sm bg-gray-200 px-3 py-1 rounded-full hover:bg-gray-300"><i class="fas fa-sign-out-alt"></i> Logout</button><button type="button" data-nav="dashboard" class="bg-blue-600 text-white px-4 py-1.5 rounded-full text-sm shadow">📄 Dashboard</button>` : `<button type="button" data-nav="login" class="text-gray-700 text-sm font-medium">Sign In</button><button type="button" data-nav="signup" class="bg-blue-600 text-white px-4 py-1.5 rounded-full text-sm shadow">Start Free</button>`}</div></div></header>`;
+    }
+
+    function renderFooter() {
+      return `<footer class="bg-white border-t mt-12"><div class="max-w-7xl mx-auto px-4 py-6 text-xs text-gray-500 flex flex-col sm:flex-row flex-wrap justify-between items-start sm:items-center gap-4"><div>© 2026 SignProz Inc. | Earn 20-30% recurring affiliate commissions</div><nav class="flex flex-wrap gap-x-5 gap-y-2 items-center" aria-label="Footer"><button type="button" data-nav="affiliate" class="text-left text-blue-600 font-medium hover:text-blue-800 underline-offset-2 hover:underline">Affiliate program</button><button type="button" data-nav="demo" class="text-left text-blue-600 font-medium hover:text-blue-800 underline-offset-2 hover:underline">Demo</button><span class="hidden sm:inline text-gray-300" aria-hidden="true">|</span><button type="button" data-nav="about" class="text-left hover:text-blue-600 underline-offset-2 hover:underline">About Us</button><button type="button" data-nav="privacy" class="text-left hover:text-blue-600 underline-offset-2 hover:underline">Privacy Policy</button><button type="button" data-nav="terms" class="text-left hover:text-blue-600 underline-offset-2 hover:underline">Terms &amp; Conditions</button></nav></div></footer>`;
+    }
+
+    function renderLegalArticle(title, bodyHtml) {
+      return `<article class="max-w-3xl mx-auto px-4 py-10 sm:py-14 text-left"><button type="button" data-nav="home" class="text-sm font-medium text-blue-600 hover:text-blue-800 mb-6">← Back to home</button><h1 class="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight">${title}</h1><p class="text-sm text-gray-500 mt-2">Last updated: April 22, 2026</p><div class="mt-8 space-y-5 text-gray-700 text-sm sm:text-base leading-relaxed">${bodyHtml}</div></article>`;
+    }
+
+    function renderHomePage() {
+      const keyFeatures = [
+        'Document Workspace',
+        'Recurring Affiliate Rewards (20-30%)',
+        'Custom Branding',
+        'Signing Links',
+        'HIPAA Compliance',
+        '400+ Integrations',
+        'AI-Assisted Agreements',
+        'SMS Delivery',
+        'Native PDF Editing',
+        'Microsoft 365 Integration',
+        'Mobile App',
+        'Sales CRM Integration',
+        'Interactive Pricing Tables',
+        'Payments',
+        'Bulk Sending',
+        'Workflow Automation',
+        'Affordable API'
+      ];
+      return `<div class="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+        <section class="rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 text-white p-8 sm:p-12 shadow-2xl">
+          <div class="grid lg:grid-cols-12 gap-8 items-center">
+            <div class="lg:col-span-7">
+              <p class="text-xs uppercase tracking-[0.16em] text-indigo-200 font-semibold mb-3">Secure eSignature platform</p>
+              <h1 class="text-4xl sm:text-5xl font-extrabold leading-tight">Professional agreement workflows for modern teams</h1>
+              <p class="text-indigo-100 text-sm sm:text-base mt-4 max-w-2xl">SignProz helps you prepare, send, sign, and track agreements at scale while offering partner rewards and API-ready automation.</p>
+              <div class="mt-7 flex flex-wrap gap-3">
+                <button type="button" data-nav="signup" class="bg-white text-indigo-800 px-5 py-2.5 rounded-xl font-semibold text-sm shadow hover:bg-indigo-50">Start free trial</button>
+                <button type="button" data-nav="pricing" class="border border-white/30 bg-white/10 text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-white/20">View pricing</button>
+                <button type="button" data-nav="templates" class="border border-white/30 bg-white/10 text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-white/20">Explore templates</button>
+                <button type="button" id="openAiFaqFromHomeBtn" class="border border-cyan-200/60 bg-cyan-400/20 text-cyan-50 px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-cyan-400/30">AI FAQ Chat</button>
+              </div>
+            </div>
+            <div class="lg:col-span-5">
+              <div class="rounded-2xl bg-white/10 border border-white/15 p-5">
+                <h3 class="font-semibold text-white mb-4">At a glance</h3>
+                <div class="grid grid-cols-2 gap-3 text-sm">
+                  <div class="rounded-xl bg-white/10 p-3"><p class="text-indigo-200 text-xs">Integrations</p><p class="font-bold text-lg">400+</p></div>
+                  <div class="rounded-xl bg-white/10 p-3"><p class="text-indigo-200 text-xs">Affiliate reward</p><p class="font-bold text-lg">20-30%</p></div>
+                  <div class="rounded-xl bg-white/10 p-3"><p class="text-indigo-200 text-xs">Sending modes</p><p class="font-bold text-lg">Bulk + SMS</p></div>
+                  <div class="rounded-xl bg-white/10 p-3"><p class="text-indigo-200 text-xs">Security</p><p class="font-bold text-lg">HIPAA-ready</p></div>
+                </div>
+                <p class="text-[11px] text-indigo-100 mt-4">Designed for sales, legal operations, HR, and customer onboarding teams.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="mt-10 grid md:grid-cols-3 gap-4">
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+            <div class="w-9 h-9 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center"><i class="fas fa-file-signature"></i></div>
+            <h3 class="font-bold text-slate-900 mt-3">Document Workspace</h3>
+            <p class="text-sm text-slate-600 mt-1">Build, route, and manage agreement packets with reusable templates and signing links.</p>
+          </div>
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+            <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center"><i class="fas fa-robot"></i></div>
+            <h3 class="font-bold text-slate-900 mt-3">AI-Assisted Agreements</h3>
+            <p class="text-sm text-slate-600 mt-1">Speed up reviews and drafting with AI assistance for clauses, summaries, and templates.</p>
+          </div>
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+            <div class="w-9 h-9 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center"><i class="fas fa-hand-holding-usd"></i></div>
+            <h3 class="font-bold text-slate-900 mt-3">Recurring Affiliate Rewards</h3>
+            <p class="text-sm text-slate-600 mt-1">Earn ongoing commissions with transparent tiering and built-in referral analytics.</p>
+          </div>
+        </section>
+
+        <section class="mt-10 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+          <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+            <h2 class="text-xl font-bold text-slate-900"><i class="fas fa-scale-balanced text-indigo-600 mr-2"></i>SignProz vs Popular eSignature Platforms</h2>
+            <span class="text-xs text-slate-500">Feature and pricing comparison (high-level)</span>
+          </div>
+          <div class="overflow-x-auto rounded-xl border border-slate-200">
+            <table class="w-full min-w-[860px] text-sm">
+              <thead>
+                <tr class="bg-slate-50 text-slate-700">
+                  <th class="p-3 text-left font-semibold">Platform</th>
+                  <th class="p-3 text-left font-semibold">Entry pricing</th>
+                  <th class="p-3 text-left font-semibold">AI assistance</th>
+                  <th class="p-3 text-left font-semibold">Integrations</th>
+                  <th class="p-3 text-left font-semibold">API access</th>
+                  <th class="p-3 text-left font-semibold">Affiliate rewards</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr class="bg-blue-50/50">
+                  <td class="p-3 font-semibold text-blue-800">SignProz</td>
+                  <td class="p-3">$10/mo annual Pro ($20 monthly) · Premium $39.95/mo annual</td>
+                  <td class="p-3">Built-in AI agreement review + AI template generation</td>
+                  <td class="p-3">400+ + Microsoft 365 + CRM</td>
+                  <td class="p-3">Affordable API tiers</td>
+                  <td class="p-3 text-emerald-700 font-semibold">20-30% recurring</td>
+                </tr>
+                <tr>
+                  <td class="p-3 font-medium">DocuSign</td>
+                  <td class="p-3">Generally higher SMB entry plans</td>
+                  <td class="p-3">Available in selected plans/add-ons</td>
+                  <td class="p-3">Broad enterprise ecosystem</td>
+                  <td class="p-3">Yes</td>
+                  <td class="p-3">Not core positioning</td>
+                </tr>
+                <tr>
+                  <td class="p-3 font-medium">Dropbox Sign (HelloSign)</td>
+                  <td class="p-3">Mid-market monthly tiers</td>
+                  <td class="p-3">Limited AI-first positioning</td>
+                  <td class="p-3">Strong SMB integrations</td>
+                  <td class="p-3">Yes</td>
+                  <td class="p-3">Not standard</td>
+                </tr>
+                <tr>
+                  <td class="p-3 font-medium">Adobe Acrobat Sign</td>
+                  <td class="p-3">Enterprise-oriented pricing</td>
+                  <td class="p-3">Adobe AI capabilities in broader suite</td>
+                  <td class="p-3">Adobe + Microsoft ecosystem</td>
+                  <td class="p-3">Yes</td>
+                  <td class="p-3">Not standard</td>
+                </tr>
+                <tr>
+                  <td class="p-3 font-medium">PandaDoc</td>
+                  <td class="p-3">Document workflow focused tiers</td>
+                  <td class="p-3">Template/content automation features</td>
+                  <td class="p-3">Sales-focused integrations</td>
+                  <td class="p-3">Yes</td>
+                  <td class="p-3">Partner program varies</td>
+                </tr>
+                <tr>
+                  <td class="p-3 font-medium">SignNow</td>
+                  <td class="p-3">Competitive SMB pricing bands</td>
+                  <td class="p-3">Automation-centric, lighter AI focus</td>
+                  <td class="p-3">Business app connectors</td>
+                  <td class="p-3">Yes</td>
+                  <td class="p-3">Not core positioning</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="text-[11px] text-slate-500 mt-3">Note: competitor details are directional and can vary by edition, region, and contract terms.</p>
+        </section>
+
+        <section class="mt-10 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+          <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+            <h2 class="text-xl font-bold text-slate-900"><i class="fas fa-layer-group text-indigo-600 mr-2"></i>Key Features</h2>
+            <span class="text-xs text-slate-500">Production-ready capabilities</span>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            ${keyFeatures.map((f) => `<span class="feature-pill"><i class="fas fa-check-circle text-blue-500"></i>${escapeHtml(f)}</span>`).join('')}
+          </div>
+        </section>
+
+        <section class="mt-10 bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 rounded-2xl p-6 shadow-sm">
+          <div class="flex flex-wrap justify-between gap-4 items-start">
+            <div>
+              <h3 class="text-lg font-bold text-slate-900 mb-1"><i class="fas fa-comments text-indigo-600 mr-2"></i>AI Assisted Chatbot FAQ</h3>
+              <p class="text-sm text-slate-600 max-w-2xl">Get quick, practical answers about integrations, compliance, API usage, pricing, and signing workflows.</p>
+            </div>
+            <button type="button" id="openAiFaqFromFeatureBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-indigo-700">Open AI FAQ</button>
+          </div>
+        </section>
+
+        <button type="button" id="openAiFaqBubbleBtn" class="home-faq-bubble"><i class="fas fa-comment-dots mr-1"></i>AI FAQ</button>
+      </div>`;
+    }
+
+    function renderAffiliatePage() {
+      const rp = revenueProjection;
+      return `<div class="max-w-6xl mx-auto px-4 py-16 font-sans text-slate-800">
+        <button type="button" data-nav="home" class="text-sm font-medium text-blue-600 hover:text-blue-800 mb-8">← Back to home</button>
+        <div class="text-center mb-16">
+          <h1 class="text-4xl font-bold mb-4 text-slate-900">SignProz Affiliate Program</h1>
+          <p class="text-xl text-slate-600 max-w-2xl mx-auto">Share SignProz. Earn recurring commissions when referrals upgrade.</p>
+          <div class="mt-8 p-6 bg-blue-50 border border-blue-100 rounded-xl inline-block max-w-2xl">
+            <p class="text-blue-800 font-medium">Earn <span class="font-bold text-blue-600">20–30% recurring commission</span> for every customer you refer. No cap, lifetime earnings.</p>
+          </div>
+        </div>
+        <section class="mb-20">
+          <div class="flex items-center gap-2 mb-8 justify-center lg:justify-start">
+            <i class="fas fa-chart-line text-green-500 text-2xl"></i>
+            <h2 class="text-2xl font-bold text-slate-900">How It Works</h2>
+          </div>
+          <div class="grid md:grid-cols-3 gap-8">
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 text-center relative pt-10">
+              <div class="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm">1</div>
+              <div class="mb-4 flex justify-center text-blue-500 text-3xl"><i class="fas fa-share-alt"></i></div>
+              <p class="font-medium text-slate-700">Share your unique referral link</p>
+            </div>
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 text-center relative pt-10">
+              <div class="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm">2</div>
+              <div class="mb-4 flex justify-center text-blue-500 text-3xl"><i class="fas fa-user-check"></i></div>
+              <p class="font-medium text-slate-700">Friend signs up &amp; upgrades to Pro/Enterprise</p>
+            </div>
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 text-center relative pt-10">
+              <div class="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm">3</div>
+              <div class="mb-4 flex justify-center text-blue-500 text-3xl"><i class="fas fa-award"></i></div>
+              <p class="font-medium text-slate-700">You earn 20–30% monthly recurring commission</p>
+            </div>
+          </div>
+        </section>
+        <section class="mb-20">
+          <div class="flex items-center gap-2 mb-8 justify-center lg:justify-start">
+            <i class="fas fa-trophy text-yellow-500 text-2xl"></i>
+            <h2 class="text-2xl font-bold text-slate-900">Affiliate Tiers</h2>
+          </div>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="p-6 rounded-xl border-2 text-center transition-transform hover:scale-105 bg-orange-100 text-orange-700 border-orange-200">
+              <div class="text-xs font-bold uppercase tracking-widest mb-1 opacity-70">Tier</div>
+              <h3 class="text-2xl font-black mb-2">Bronze</h3>
+              <p class="text-sm font-medium mb-1">0–4 referrals</p>
+              <p class="text-3xl font-bold">20%</p>
+              <p class="text-[10px] mt-2 opacity-80 uppercase tracking-tighter">Commission</p>
+            </div>
+            <div class="p-6 rounded-xl border-2 text-center transition-transform hover:scale-105 bg-slate-100 text-slate-700 border-slate-200">
+              <div class="text-xs font-bold uppercase tracking-widest mb-1 opacity-70">Tier</div>
+              <h3 class="text-2xl font-black mb-2">Silver</h3>
+              <p class="text-sm font-medium mb-1">5–14 referrals</p>
+              <p class="text-3xl font-bold">22%</p>
+              <p class="text-[10px] mt-2 opacity-80 uppercase tracking-tighter">Commission</p>
+            </div>
+            <div class="p-6 rounded-xl border-2 text-center transition-transform hover:scale-105 bg-yellow-100 text-yellow-700 border-yellow-200">
+              <div class="text-xs font-bold uppercase tracking-widest mb-1 opacity-70">Tier</div>
+              <h3 class="text-2xl font-black mb-2">Gold</h3>
+              <p class="text-sm font-medium mb-1">15–49 referrals</p>
+              <p class="text-3xl font-bold">25%</p>
+              <p class="text-[10px] mt-2 opacity-80 uppercase tracking-tighter">Commission</p>
+            </div>
+            <div class="p-6 rounded-xl border-2 text-center transition-transform hover:scale-105 bg-blue-100 text-blue-700 border-blue-200">
+              <div class="text-xs font-bold uppercase tracking-widest mb-1 opacity-70">Tier</div>
+              <h3 class="text-2xl font-black mb-2">Platinum</h3>
+              <p class="text-sm font-medium mb-1">50+ referrals</p>
+              <p class="text-3xl font-bold">30%</p>
+              <p class="text-[10px] mt-2 opacity-80 uppercase tracking-tighter">Commission</p>
+            </div>
+          </div>
+        </section>
+        <section class="mb-8">
+          <div class="flex items-center gap-2 mb-6 justify-center lg:justify-start">
+            <i class="fas fa-table text-indigo-600 text-2xl"></i>
+            <h2 class="text-2xl font-bold text-slate-900">3-Year Revenue Projection</h2>
+          </div>
+          <p class="text-sm text-slate-600 max-w-3xl mb-6 text-center lg:text-left">Illustrative earnings based on part-time effort (about 1–2 hours per week), with <strong class="text-slate-800">36 / 84 / 144</strong> new paid referrals in years 1–3, 20% base commission rising toward 30% as you tier up. Figures are modeled, not a guarantee—your results depend on audience and effort.</p>
+          <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <table class="w-full text-sm projection-table min-w-[640px]">
+              <thead><tr class="bg-slate-50 text-left"><th class="p-3 font-semibold text-slate-700">Year</th><th class="p-3 font-semibold text-slate-700">New referrals</th><th class="p-3 font-semibold text-slate-700">Cumulative referrals</th><th class="p-3 font-semibold text-slate-700">Projected earnings</th><th class="p-3 font-semibold text-slate-700">Avg / month</th><th class="p-3 font-semibold text-slate-700">Run-rate (end of year)</th></tr></thead>
+              <tbody>
+                <tr class="border-t border-slate-100"><td class="p-3 font-medium">Year 1</td><td class="p-3">${rp.year1.newReferrals}</td><td class="p-3">${rp.year1.totalReferrals}</td><td class="p-3 text-green-700 font-semibold">$${rp.year1.earnings.toLocaleString()}</td><td class="p-3">$${rp.year1.avgMonthly}</td><td class="p-3">$${rp.year1.endMonthly}/mo</td></tr>
+                <tr class="border-t border-slate-100"><td class="p-3 font-medium">Year 2</td><td class="p-3">${rp.year2.newReferrals}</td><td class="p-3">${rp.year2.totalReferrals}</td><td class="p-3 text-green-700 font-semibold">$${rp.year2.earnings.toLocaleString()}</td><td class="p-3">$${rp.year2.avgMonthly}</td><td class="p-3">$${rp.year2.endMonthly}/mo</td></tr>
+                <tr class="border-t border-slate-100"><td class="p-3 font-medium">Year 3</td><td class="p-3">${rp.year3.newReferrals}</td><td class="p-3">${rp.year3.totalReferrals}</td><td class="p-3 text-green-700 font-semibold">$${rp.year3.earnings.toLocaleString()}</td><td class="p-3">$${rp.year3.avgMonthly}</td><td class="p-3">$${rp.year3.endMonthly}/mo</td></tr>
+                <tr class="bg-blue-50 border-t border-blue-100"><td class="p-3 font-bold text-slate-900">3-year total</td><td class="p-3">—</td><td class="p-3 font-bold">${rp.total.referrals}</td><td class="p-3 font-bold text-blue-800">$${rp.total.earnings.toLocaleString()}</td><td class="p-3">—</td><td class="p-3 font-bold text-blue-800">~$${rp.year3.endMonthly}/mo</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+        <div class="text-center pb-8"><button type="button" data-nav="signup" class="btn-primary text-white px-8 py-3 rounded-xl font-semibold shadow">Get your referral link</button></div>
+      </div>`;
+    }
+
+    function renderDemoPage() {
+      return `<div class="max-w-6xl mx-auto px-4 py-10 pb-20 text-slate-800">
+        <button type="button" data-nav="home" class="text-sm font-medium text-blue-600 hover:text-blue-800 mb-6">← Back to home</button>
+        <div class="rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-700 text-white p-8 mb-12 shadow-xl">
+          <p class="text-xs font-semibold uppercase tracking-widest text-indigo-200 mb-2">Interactive product tour</p>
+          <h1 class="text-3xl sm:text-4xl font-bold mb-3">SignProz feature demo</h1>
+          <p class="text-indigo-100 max-w-2xl text-sm sm:text-base leading-relaxed">Below is a <strong class="text-white">static walkthrough</strong> of what subscribers and admins see: dashboard &amp; affiliate earnings, a mock admin backend, document signing with audit trail, and send/receipt notifications. Use <strong class="text-white">Sign In</strong> with any email, then open the <strong class="text-white">Dashboard</strong> to try signing, templates, and live referral API stats (when configured).</p>
+          <div class="mt-6 flex flex-wrap gap-3">
+            <button type="button" data-nav="login" class="bg-white text-indigo-700 px-5 py-2.5 rounded-xl font-semibold text-sm shadow hover:bg-indigo-50">Try live dashboard</button>
+            <button type="button" data-nav="templates" class="bg-indigo-500/80 border border-white/30 text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-indigo-500">Browse templates</button>
+            <button type="button" data-nav="affiliate" class="bg-indigo-500/80 border border-white/30 text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-indigo-500">Affiliate program</button>
+          </div>
+        </div>
+
+        <section class="mb-14">
+          <h2 class="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2"><i class="fas fa-chart-pie text-blue-600"></i> Subscriber dashboard</h2>
+          <p class="text-sm text-slate-600 mb-6">Referral code, tier, expected payout, and 3-year projection—mirrors the signed-in experience.</p>
+          <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-6 shadow-inner">
+            <div class="flex flex-wrap justify-between items-start gap-4 mb-6">
+              <div><p class="text-xs text-slate-500">Logged in as</p><p class="font-semibold text-slate-900">demo.user@signproz.com</p><p class="text-xs text-slate-500 mt-1">Plan: <span class="text-green-700 font-medium">Pro</span></p></div>
+              <div class="text-right"><p class="text-xs text-slate-500">Your referral code</p><p class="font-mono font-bold text-lg text-blue-700">SF-DEMO01</p><button type="button" class="text-xs text-blue-600 mt-1" disabled title="Live on real dashboard">Copy link (live)</button></div>
+            </div>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+              <div class="bg-white rounded-xl p-4 border border-slate-100 text-center"><div class="text-2xl font-bold text-slate-800">12</div><div class="text-xs text-slate-500">Total referrals</div></div>
+              <div class="bg-white rounded-xl p-4 border border-slate-100 text-center"><div class="text-2xl font-bold text-green-600">8</div><div class="text-xs text-slate-500">Active (paid)</div></div>
+              <div class="bg-white rounded-xl p-4 border border-slate-100 text-center"><div class="text-2xl font-bold text-blue-600">$184.20</div><div class="text-xs text-slate-500">Expected payout</div></div>
+              <div class="bg-white rounded-xl p-4 border border-slate-100 text-center"><span class="inline-block px-3 py-1 rounded-full text-white text-sm tier-gold">Gold (25%)</span><div class="text-xs text-slate-500 mt-2">Affiliate tier</div></div>
+            </div>
+            <p class="text-xs text-slate-500 mb-2">Recent referral activity</p>
+            <div class="bg-white rounded-xl border border-slate-100 divide-y divide-slate-100 text-sm">
+              <div class="flex justify-between p-3"><span>alex@company.com</span><span class="text-green-600 font-medium">Pro · +$7.25/mo</span></div>
+              <div class="flex justify-between p-3"><span>sam@startup.io</span><span class="text-amber-600 font-medium">Pending invite</span></div>
+              <div class="flex justify-between p-3"><span>legal@enterprise.co</span><span class="text-green-600 font-medium">Enterprise · +$124.75/mo</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="mb-14">
+          <h2 class="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2"><i class="fas fa-server text-purple-600"></i> Backend &amp; admin (demo)</h2>
+          <p class="text-sm text-slate-600 mb-6">Illustrative admin console: user directory, plan overrides, webhook delivery log, and system health—typical of a hosted SignProz deployment.</p>
+          <div class="grid lg:grid-cols-12 gap-4">
+            <aside class="lg:col-span-3 rounded-xl bg-slate-900 text-slate-200 p-4 text-sm space-y-2">
+              <div class="font-bold text-white mb-3">Admin</div>
+              <div class="bg-white/10 rounded-lg px-3 py-2 text-white">Overview</div>
+              <div class="px-3 py-2 hover:bg-white/5 rounded-lg">Users &amp; plans</div>
+              <div class="px-3 py-2 hover:bg-white/5 rounded-lg">Documents</div>
+              <div class="px-3 py-2 hover:bg-white/5 rounded-lg">Affiliate payouts</div>
+              <div class="px-3 py-2 hover:bg-white/5 rounded-lg">Webhooks / API</div>
+              <div class="px-3 py-2 hover:bg-white/5 rounded-lg">Audit export</div>
+            </aside>
+            <div class="lg:col-span-9 space-y-4">
+              <div class="grid sm:grid-cols-3 gap-3">
+                <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-4"><p class="text-xs text-emerald-700 font-semibold">API</p><p class="text-2xl font-bold text-emerald-800">99.98%</p><p class="text-xs text-emerald-600">30d uptime</p></div>
+                <div class="bg-amber-50 border border-amber-100 rounded-xl p-4"><p class="text-xs text-amber-800 font-semibold">Queue</p><p class="text-2xl font-bold text-amber-900">0</p><p class="text-xs text-amber-700">Failed jobs</p></div>
+                <div class="bg-blue-50 border border-blue-100 rounded-xl p-4"><p class="text-xs text-blue-800 font-semibold">Storage</p><p class="text-2xl font-bold text-blue-900">42%</p><p class="text-xs text-blue-700">Signed PDFs</p></div>
+              </div>
+              <div class="rounded-xl border border-slate-200 bg-white overflow-hidden">
+                <div class="px-4 py-2 bg-slate-50 border-b text-xs font-semibold text-slate-600">Users (sample)</div>
+                <table class="w-full text-xs sm:text-sm"><thead><tr class="text-left text-slate-500 border-b"><th class="p-3">Email</th><th class="p-3">Plan</th><th class="p-3">Docs / mo</th><th class="p-3">Role</th></tr></thead><tbody>
+                  <tr class="border-b border-slate-50"><td class="p-3 font-mono">admin@signproz.com</td><td class="p-3">Enterprise</td><td class="p-3">Unlimited</td><td class="p-3"><span class="text-purple-600 font-medium">Super admin</span></td></tr>
+                  <tr class="border-b border-slate-50"><td class="p-3 font-mono">demo.user@signproz.com</td><td class="p-3">Pro</td><td class="p-3">142 / 200</td><td class="p-3">Member</td></tr>
+                  <tr><td class="p-3 font-mono">api_integration@partner.com</td><td class="p-3">API</td><td class="p-3">12k calls</td><td class="p-3">Service</td></tr>
+                </tbody></table>
+              </div>
+              <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p class="text-xs font-semibold text-slate-600 mb-2">Webhook delivery log</p>
+                <ul class="text-xs font-mono space-y-1 text-slate-700">
+                  <li><span class="text-green-600">200</span> document.completed → https://api.partner.com/hooks/spz <span class="text-slate-400">124ms</span></li>
+                  <li><span class="text-green-600">200</span> signer.viewed → https://api.partner.com/hooks/spz <span class="text-slate-400">98ms</span></li>
+                  <li><span class="text-amber-600">429</span> affiliate.payout.scheduled → https://api.partner.com/hooks/spz <span class="text-slate-400">retry 1/5</span></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="mb-14">
+          <h2 class="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2"><i class="fas fa-file-signature text-blue-600"></i> Document signing &amp; audit trail</h2>
+          <p class="text-sm text-slate-600 mb-6">Each field records who signed, when, and IP/device class. Completed packets export with immutable audit log.</p>
+          <div class="grid md:grid-cols-2 gap-6">
+            <div class="rounded-xl border-2 border-dashed border-blue-200 bg-white p-6 min-h-[220px] relative" style="background-image: radial-gradient(#e5e7eb 0.5px, transparent 0.5px); background-size: 8px 8px;">
+              <p class="text-center text-xs text-slate-400 mb-4">Sample agreement — Signer view</p>
+              <div class="absolute left-[18%] top-[38%] -translate-x-1/2 -translate-y-1/2 bg-green-50 border-2 border-green-500 rounded-lg px-3 py-2 text-center text-xs shadow"><span class="text-green-700 font-semibold">✓ Signed</span><br><span class="font-serif italic text-sm">Alex Rivera</span></div>
+              <div class="absolute right-[22%] top-[55%] translate-x-1/2 border-2 border-dashed border-blue-400 rounded-lg px-3 py-2 text-center text-xs bg-amber-50/90"><span class="text-amber-800 font-semibold">Pending</span><br>Legal counsel</div>
+            </div>
+            <div class="rounded-xl border border-slate-200 bg-white p-4">
+              <p class="text-xs font-semibold text-slate-600 mb-3"><i class="fas fa-list-ul text-blue-500 mr-1"></i> Audit trail (excerpt)</p>
+              <ol class="text-xs space-y-3 border-l-2 border-blue-200 pl-4">
+                <li><span class="text-slate-400">2026-04-20 09:12</span> — Document created · <span class="text-slate-700">Owner: demo.user@signproz.com</span></li>
+                <li><span class="text-slate-400">2026-04-20 09:14</span> — Invite sent to <span class="font-mono">alex@company.com</span> <span class="text-blue-600">(email)</span></li>
+                <li><span class="text-slate-400">2026-04-20 14:02</span> — Signer opened link · <span class="text-slate-600">Chrome · US-East</span></li>
+                <li><span class="text-slate-400">2026-04-20 14:08</span> — Field “Employee signature” completed · typed signature · <span class="text-green-700 font-medium">eIDAS-ready hash logged</span></li>
+                <li><span class="text-slate-400">2026-04-20 14:09</span> — Certificate of completion generated</li>
+              </ol>
+            </div>
+          </div>
+        </section>
+
+        <section class="mb-14">
+          <h2 class="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2"><i class="fas fa-envelope-open-text text-teal-600"></i> Send &amp; receipt notifications</h2>
+          <p class="text-sm text-slate-600 mb-6">Email and in-app alerts for every stage: invite, reminder before expiry, viewed, signed, and final PDF receipt to all parties.</p>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              <p class="text-xs font-bold text-slate-500 uppercase mb-3">Outbox (sent)</p>
+              <ul class="text-sm space-y-3">
+                <li class="flex gap-3"><span class="text-teal-600"><i class="fas fa-paper-plane"></i></span><div><p class="font-medium text-slate-800">Signature requested</p><p class="text-xs text-slate-500">To: alex@company.com · Apr 20, 9:14 AM</p></div></li>
+                <li class="flex gap-3"><span class="text-amber-500"><i class="fas fa-bell"></i></span><div><p class="font-medium text-slate-800">Reminder: sign before Apr 27</p><p class="text-xs text-slate-500">To: legal@enterprise.co · Apr 23, 8:00 AM</p></div></li>
+                <li class="flex gap-3"><span class="text-blue-600"><i class="fas fa-file-export"></i></span><div><p class="font-medium text-slate-800">Completed PDF + audit pack</p><p class="text-xs text-slate-500">To: all signers · Apr 20, 2:10 PM</p></div></li>
+              </ul>
+            </div>
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+              <p class="text-xs font-bold text-slate-500 uppercase mb-3">Inbox (received)</p>
+              <ul class="text-sm space-y-3">
+                <li class="flex gap-3"><span class="text-slate-400"><i class="fas fa-inbox"></i></span><div><p class="font-medium text-slate-800">Receipt: document viewed</p><p class="text-xs text-slate-500">You were notified when the signer opened the envelope.</p></div></li>
+                <li class="flex gap-3"><span class="text-green-600"><i class="fas fa-check-circle"></i></span><div><p class="font-medium text-slate-800">Receipt: signature captured</p><p class="text-xs text-slate-500">Field-level hash stored · SMS optional on Enterprise</p></div></li>
+                <li class="flex gap-3"><span class="text-indigo-600"><i class="fas fa-shield-halved"></i></span><div><p class="font-medium text-slate-800">Security alert</p><p class="text-xs text-slate-500">New device login · Arlington, VA (acknowledged)</p></div></li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <div class="rounded-2xl border border-blue-200 bg-blue-50/80 p-6 text-center">
+          <p class="text-slate-800 font-medium mb-4">Ready to use the real signing workspace, API stats, and templates?</p>
+          <button type="button" data-nav="login" class="btn-primary text-white px-8 py-3 rounded-xl font-semibold shadow mr-2 mb-2">Sign in to try</button>
+          <button type="button" data-nav="dashboard" class="border border-blue-300 text-blue-800 bg-white px-8 py-3 rounded-xl font-semibold mb-2">Open dashboard</button>
+          <p class="text-xs text-slate-600 mt-3 max-w-md mx-auto">If you are not signed in, the dashboard will prompt you to log in. Use any email on the demo sign-in screen.</p>
+        </div>
+      </div>`;
+    }
+
+    function renderPricingPage() {
+      const isYearly = pricingBillingCycle === 'yearly';
+      const proDisplay = isYearly ? '$10 / month' : '$20 / month';
+      const premiumDisplay = isYearly ? '$39.95 / month' : '$59.95 / month';
+      const yearlyBtnClass = isYearly
+        ? 'bg-blue-600 text-white shadow'
+        : 'bg-white text-slate-600 border border-slate-200';
+      const monthlyBtnClass = !isYearly
+        ? 'bg-blue-600 text-white shadow'
+        : 'bg-white text-slate-600 border border-slate-200';
+
+      return `<div class="max-w-6xl mx-auto px-4 py-12">
+        <h2 class="text-3xl font-bold text-center">Simple, Transparent Pricing</h2>
+        <p class="text-center text-sm text-slate-500 mt-2">Subscribers can choose monthly or yearly billing. Free package stays unchanged.</p>
+
+        <div class="flex items-center justify-center mt-6">
+          <div class="inline-flex gap-2 rounded-full bg-slate-100 p-1">
+            <button type="button" id="pricingYearlyToggle" class="px-4 py-1.5 rounded-full text-sm font-semibold ${yearlyBtnClass}">Yearly billing</button>
+            <button type="button" id="pricingMonthlyToggle" class="px-4 py-1.5 rounded-full text-sm font-semibold ${monthlyBtnClass}">Monthly billing</button>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 xl:grid-cols-4 gap-6 mt-10 max-w-7xl mx-auto">
+          <div class="bg-white rounded-2xl shadow-md p-6 text-center pricing-card">
+            <i class="fas fa-gift text-4xl text-blue-500"></i>
+            <h3 class="text-2xl font-bold mt-2">Free</h3>
+            <p class="text-gray-500">$0</p>
+            <ul class="mt-4 space-y-2 text-sm text-left">
+              <li>✓ ${FREE_TIER_LIMIT} total documents</li>
+              <li>✓ Basic audit trail</li>
+            </ul>
+            <button data-nav="signup" class="mt-6 w-full bg-blue-50 text-blue-700 py-2 rounded-xl font-medium">Start Free</button>
+          </div>
+
+          <div class="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl shadow-md p-6 pricing-card border-2 border-indigo-200">
+            <div class="text-center">
+              <i class="fas fa-rocket text-4xl text-indigo-600"></i>
+              <h3 class="text-2xl font-bold mt-2">PRO</h3>
+              <p class="text-3xl font-extrabold text-slate-900 mt-2">${proDisplay}</p>
+              <p class="text-xs text-slate-500 mt-1">If paid annually = $10 / month · If paid monthly = $20 / month</p>
+              <p class="text-xs text-indigo-700 font-medium mt-1">per month when paid annually</p>
+            </div>
+            <button id="upgradeUnlimitedPricingBtn" class="mt-5 w-full btn-primary text-white py-2.5 rounded-xl font-semibold">START FREE TRIAL</button>
+            <ul class="mt-4 space-y-2 text-sm text-slate-700">
+              <li>✓ 14-day free trial</li>
+              <li>✓ Unlimited documents</li>
+              <li>✓ 1 Sender</li>
+              <li>✓ Multiple signers</li>
+              <li>✓ Templates</li>
+              <li>✓ Branding</li>
+              <li>✓ Signing links</li>
+            </ul>
+          </div>
+
+          <div class="bg-white rounded-2xl shadow-md p-6 pricing-card border border-slate-200">
+            <div class="text-center">
+              <i class="fas fa-crown text-4xl text-fuchsia-600"></i>
+              <h3 class="text-2xl font-bold mt-2">Premium</h3>
+              <p class="text-3xl font-extrabold text-slate-900 mt-2">${premiumDisplay}</p>
+              <p class="text-xs text-slate-500 mt-1">If paid annually = $39.95 / month · If paid monthly = $59.95 / month</p>
+            </div>
+            <button id="upgradePremiumPricingBtn" class="mt-5 w-full bg-fuchsia-600 text-white py-2.5 rounded-xl font-semibold hover:bg-fuchsia-700">START FREE TRIAL</button>
+            <ul class="mt-4 space-y-2 text-sm text-slate-700">
+              <li>✓ 14-day free trial</li>
+              <li>✓ Unlimited documents</li>
+              <li>✓ up to 5 Senders</li>
+              <li>✓ Multiple signers</li>
+              <li>✓ Templates</li>
+              <li>✓ Branding</li>
+              <li>✓ Signing links</li>
+              <li>✓ Premium features</li>
+            </ul>
+          </div>
+
+          <div class="bg-gradient-to-br from-purple-900 to-indigo-900 rounded-2xl shadow-xl p-6 pricing-card text-white">
+            <div class="text-center">
+              <i class="fas fa-building text-4xl text-purple-300"></i>
+              <h3 class="text-2xl font-bold mt-2">Enterprise</h3>
+              <p class="text-3xl font-extrabold mt-2">$499 / month</p>
+              <p class="text-xs text-purple-200 mt-1">Advanced scale and compliance for larger teams</p>
+            </div>
+            <button id="upgradeEnterprisePricingBtn" class="mt-5 w-full bg-white text-purple-900 py-2.5 rounded-xl font-semibold">Contact Sales</button>
+            <ul class="mt-4 space-y-2 text-sm text-purple-100">
+              <li>✓ Unlimited documents</li>
+              <li>✓ Unlimited senders and team roles</li>
+              <li>✓ SLA + SSO</li>
+              <li>✓ White-labeling & custom branding</li>
+              <li>✓ API and webhook support</li>
+              <li>✓ Priority onboarding and support</li>
+              <li>✓ Security controls and audit exports</li>
+              <li>✓ Dedicated account management</li>
+            </ul>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    function renderAboutPage() {
+      const body = `
+        <p class="text-lg text-gray-800 font-medium">SignProz helps teams and individuals send, sign, and track documents online—while rewarding partners who spread the word.</p>
+        <section><h2 class="text-xl font-semibold text-gray-900 mt-2 mb-2">Our mission</h2><p>We believe getting a signature should be fast, clear, and fair. SignProz combines a straightforward signing experience with tools for templates, reminders, and an audit-friendly trail so you always know what happened and when.</p></section>
+        <section><h2 class="text-xl font-semibold text-gray-900 mt-2 mb-2">The affiliate program</h2><p>We built one of the most transparent affiliate programs in the eSignature space: <strong class="text-gray-900">20–30% recurring commission</strong> on qualifying paid referrals, tiered by your volume, with monthly payouts and real-time stats in your dashboard. Whether you are a creator, agency, or consultant, you can earn as your referrals grow.</p></section>
+        <section><h2 class="text-xl font-semibold text-gray-900 mt-2 mb-2">Who we serve</h2><p>Freelancers, sales teams, HR, legal operations, and growing businesses use SignProz for NDAs, contracts, onboarding packets, and anything that needs a dependable signature workflow—without unnecessary complexity.</p></section>
+        <section><h2 class="text-xl font-semibold text-gray-900 mt-2 mb-2">Contact</h2><p>Questions about SignProz or partnerships? Email <a href="mailto:support@signproz.com" class="text-blue-600 hover:underline">support@signproz.com</a>. We aim to respond within two business days.</p><p class="text-xs text-gray-500 mt-4"><em>Note: SignProz is a demonstration product; company details and contact channels may be updated as the product matures.</em></p></section>`;
+      return renderLegalArticle('About Us', body);
+    }
+
+    function renderPrivacyPage() {
+      const body = `
+        <p>This Privacy Policy describes how SignProz (“we,” “us,” or “our”) handles information when you use our website, demo application, and related services (collectively, the “Services”). By using the Services, you agree to this policy.</p>
+        <section><h2 class="text-xl font-semibold text-gray-900 mt-2 mb-2">Information we collect</h2><ul class="list-disc pl-5 space-y-2"><li><strong>Account data:</strong> such as email address and plan type when you create a demo account.</li><li><strong>Usage and document metadata:</strong> such as timestamps, template choices, and audit log entries generated inside the app.</li><li><strong>Signature-related content:</strong> typed names, drawn signatures, and field placement you submit in the signing flow.</li><li><strong>Affiliate and referral data:</strong> referral codes, referral counts, and payout-related summaries shown in the dashboard or returned by optional referral APIs.</li><li><strong>Technical data:</strong> browser type, approximate location derived from IP (if collected by infrastructure providers), and diagnostic logs needed to operate and secure the Services.</li></ul></section>
+        <section><h2 class="text-xl font-semibold text-gray-900 mt-2 mb-2">How we use information</h2><p>We use the information above to provide and improve the Services, authenticate sessions, show dashboards and affiliate statistics, prevent abuse, comply with law, and communicate with you about your account or program status.</p></section>
+        <section><h2 class="text-xl font-semibold text-gray-900 mt-2 mb-2">Sharing</h2><p>We do not sell your personal information. We may share data with vendors that host our site, process payments (if enabled), or provide analytics—only as needed to run the Services and subject to appropriate safeguards. We may disclose information if required by law or to protect our rights and users.</p></section>
+        <section><h2 class="text-xl font-semibold text-gray-900 mt-2 mb-2">Cookies and local storage</h2><p>We may use cookies or similar technologies for session state, preferences, and security. You can control cookies through your browser settings; disabling them may limit some features.</p></section>
+        <section><h2 class="text-xl font-semibold text-gray-900 mt-2 mb-2">Retention</h2><p>We retain information for as long as your account is active or as needed to provide the Services, meet legal obligations, resolve disputes, and enforce our agreements. Demo data may be reset or deleted periodically.</p></section>
+        <section><h2 class="text-xl font-semibold text-gray-900 mt-2 mb-2">Your choices</h2><p>Depending on your region, you may have rights to access, correct, delete, or export personal data, or to object to certain processing. Contact us at <a href="mailto:privacy@signproz.com" class="text-blue-600 hover:underline">privacy@signproz.com</a> to make a request. We may verify your identity before responding.</p></section>
+        <section><h2 class="text-xl font-semibold text-gray-900 mt-2 mb-2">Children</h2><p>The Services are not directed at children under 16, and we do not knowingly collect their personal information.</p></section>
+        <section><h2 class="text-xl font-semibold text-gray-900 mt-2 mb-2">Changes</h2><p>We may update this Privacy Policy from time to time. We will post the revised date at the top of this page and, where appropriate, provide additional notice.</p></section>`;
+      return renderLegalArticle('Privacy Policy', body);
+    }
+
+    function renderTermsPage() {
+      const body = `
+        <p>These Terms &amp; Conditions (“Terms”) govern your access to and use of SignProz’s website, demo application, and related offerings (the “Services”). By accessing or using the Services, you agree to these Terms.</p>
+        <section><h2 class="text-xl font-semibold text-gray-900 mt-2 mb-2">1. The Services</h2><p>SignProz provides tools to prepare documents, collect signatures, and view activity logs. Some features are offered as a <strong class="text-gray-900">demonstration</strong> and may not constitute a production-ready legal or compliance solution. You are responsible for determining whether the Services meet your regulatory and legal requirements.</p></section>
+        <section><h2 class="text-xl font-semibold text-gray-900 mt-2 mb-2">2. Accounts</h2><p>You must provide accurate information and keep your credentials confidential. You are responsible for activity under your account. We may suspend or terminate accounts that violate these Terms or pose a security risk.</p></section>
+        <section><h2 class="text-xl font-semibold text-gray-900 mt-2 mb-2">3. Acceptable use</h2><p>You agree not to misuse the Services, including by attempting to access non-public systems, interfere with other users, upload unlawful content, or use the Services to defraud others. Bulk messaging and integrations must comply with applicable anti-spam and marketing laws.</p></section>
+        <section><h2 class="text-xl font-semibold text-gray-900 mt-2 mb-2">4. Signatures and legal effect</h2><p>Electronic signatures may be legally binding in many jurisdictions when used correctly. SignProz does not provide legal advice. You should consult qualified counsel for questions about enforceability, consent, or recordkeeping for your specific use case.</p></section>
+        <section><h2 class="text-xl font-semibold text-gray-900 mt-2 mb-2">5. Plans, fees, and trials</h2><p>Paid plans, limits (such as document caps), and pricing are described on the Pricing page and may change with notice. Unless stated otherwise, fees are non-refundable except as required by law or at our discretion.</p></section>
+        <section><h2 class="text-xl font-semibold text-gray-900 mt-2 mb-2">6. Affiliate program</h2><p>Eligible affiliates may earn recurring commissions on qualifying paid subscriptions referred through approved links or codes. Commission rates (e.g., 20–30%), tiers, payout schedules, minimum thresholds, and eligibility are published in the affiliate materials and may be updated. Self-referrals, fraudulent signups, or chargebacks may void commissions. We reserve the right to withhold or claw back payouts in cases of abuse.</p></section>
+        <section><h2 class="text-xl font-semibold text-gray-900 mt-2 mb-2">7. Intellectual property</h2><p>SignProz and its branding, software, and content are owned by SignProz or its licensors. Subject to these Terms, we grant you a limited, non-exclusive license to use the Services for your internal or personal business purposes.</p></section>
+        <section><h2 class="text-xl font-semibold text-gray-900 mt-2 mb-2">8. Disclaimers</h2><p>The Services are provided “as is” and “as available.” To the fullest extent permitted by law, we disclaim warranties of merchantability, fitness for a particular purpose, and non-infringement.</p></section>
+        <section><h2 class="text-xl font-semibold text-gray-900 mt-2 mb-2">9. Limitation of liability</h2><p>To the maximum extent permitted by law, SignProz and its affiliates will not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits or data, arising from your use of the Services. Our aggregate liability for any claim relating to the Services will not exceed the greater of (a) the amounts you paid us in the three months before the claim or (b) fifty U.S. dollars (USD $50).</p></section>
+        <section><h2 class="text-xl font-semibold text-gray-900 mt-2 mb-2">10. Indemnity</h2><p>You will defend and indemnify SignProz against claims arising from your content, your violation of these Terms, or your violation of others’ rights.</p></section>
+        <section><h2 class="text-xl font-semibold text-gray-900 mt-2 mb-2">11. Termination</h2><p>You may stop using the Services at any time. We may suspend or terminate access for operational, legal, or policy reasons. Provisions that by their nature should survive will survive termination.</p></section>
+        <section><h2 class="text-xl font-semibold text-gray-900 mt-2 mb-2">12. Governing law</h2><p>These Terms are governed by the laws of the State of Delaware, USA, excluding conflict-of-law rules, unless a different jurisdiction is required by mandatory local law.</p></section>
+        <section><h2 class="text-xl font-semibold text-gray-900 mt-2 mb-2">13. Contact</h2><p>For questions about these Terms, contact <a href="mailto:legal@signproz.com" class="text-blue-600 hover:underline">legal@signproz.com</a>.</p></section>`;
+      return renderLegalArticle('Terms &amp; Conditions', body);
+    }
+    function renderLoginPage() { return `<div class="max-w-md mx-auto px-4 py-16"><div class="bg-white rounded-2xl shadow-xl p-8"><h2 class="text-2xl font-bold">Sign in</h2><input type="email" id="loginEmail" placeholder="Email address" class="w-full border rounded-xl p-3 mt-4"><button id="doLoginBtn" class="w-full btn-primary text-white py-3 rounded-xl mt-4 font-semibold">Continue</button><p class="text-center mt-4 text-sm">No account? <button data-nav="signup" class="text-blue-600">Start free trial</button></p></div></div>`; }
+    function renderSignupPage() { return `<div class="max-w-md mx-auto px-4 py-16"><div class="bg-white rounded-2xl shadow-xl p-8"><h2 class="text-2xl font-bold">Create free account</h2><p class="text-gray-500 text-sm">Join our affiliate program and start earning today.</p><input type="email" id="signupEmail" placeholder="Email" class="w-full border rounded-xl p-3 mt-4"><input type="text" id="referralCode" placeholder="Referral code (optional)" class="w-full border rounded-xl p-3 mt-2"><button id="doSignupBtn" class="w-full btn-primary text-white py-3 rounded-xl mt-4 font-semibold">Sign Up & Get Affiliate Link</button></div></div>`; }
+    
+    function renderTemplatesPage() {
+      return `<div class="max-w-6xl mx-auto px-4 py-12"><h2 class="text-3xl font-bold">Document Templates</h2><div class="grid md:grid-cols-3 gap-6 mt-8">${templates.map(t => `<div class="bg-white rounded-xl shadow-sm p-5 template-card border border-gray-200"><i class="fas fa-file-alt text-blue-500 text-2xl"></i><h3 class="font-bold text-lg mt-2">${t.name}</h3><button class="use-template-btn mt-3 text-sm bg-blue-50 text-blue-700 px-3 py-1 rounded-full" data-id="${t.id}">Use template</button></div>`).join('')}</div></div>`;
+    }
+
+    function renderDashboardSidebar() {
+      const s = dashboardSidebarSection;
+      const docGroup = ['documents', 'waiting_me', 'waiting_others', 'signed'];
+      const docParentActive = docGroup.includes(s);
+      return `<aside class="signproz-sidebar" aria-label="Document management">
+        <input type="file" id="dashSidebarFileInput" class="hidden" accept=".pdf,.doc,.docx,application/pdf" multiple>
+        <div class="sidebar-action">
+          <button type="button" id="dashUploadDocBtn" class="upload-btn">Upload Document</button>
+          <button type="button" id="dashCloudToggle" class="cloud-dropdown" aria-expanded="false" aria-haspopup="true">
+            <span>Get from Cloud</span><span class="arrow-down" aria-hidden="true"></span>
+          </button>
+          <div id="dashCloudMenu" class="cloud-menu" role="menu">
+            <button type="button" role="menuitem" class="dash-cloud-pick" data-cloud="gdrive">Google Drive</button>
+            <button type="button" role="menuitem" class="dash-cloud-pick" data-cloud="dropbox">Dropbox</button>
+            <button type="button" role="menuitem" class="dash-cloud-pick" data-cloud="box">Box</button>
+          </div>
+        </div>
+        <nav class="sidebar-nav" aria-label="Documents">
+          <ul class="nav-list">
+            <li>
+              <button type="button" id="dashNavDocuments" class="nav-item ${docParentActive ? 'active' : ''}" data-dash-section="documents">
+                <span class="icon" aria-hidden="true">📄</span><span class="label">Documents</span>
+              </button>
+            </li>
+            <li><button type="button" class="nav-sub-item ${s === 'waiting_me' ? 'active' : ''}" data-dash-section="waiting_me">Waiting for me</button></li>
+            <li><button type="button" class="nav-sub-item ${s === 'waiting_others' ? 'active' : ''}" data-dash-section="waiting_others">Waiting for others</button></li>
+            <li><button type="button" class="nav-sub-item ${s === 'signed' ? 'active' : ''}" data-dash-section="signed">Signed</button></li>
+            <li><button type="button" data-nav="templates" class="nav-item"><span class="icon" aria-hidden="true">📑</span><span class="label">Templates</span></button></li>
+            <li><button type="button" id="dashSidebarBulkSend" class="nav-item"><span class="icon" aria-hidden="true">✉️</span><span class="label">Bulk send</span></button></li>
+            <li><button type="button" id="dashSidebarTeamBtn" class="nav-item"><span class="icon" aria-hidden="true">👥</span><span class="label">Team</span></button></li>
+            <li><button type="button" id="dashSidebarAiBtn" class="nav-item"><span class="icon" aria-hidden="true">💬</span><span class="label">AI Assistant</span><span class="badge-new">NEW</span></button></li>
+          </ul>
+        </nav>
+      </aside>`;
+    }
+
+    function renderDashboardEditorSidebar() {
+      if (!currentUser) return '';
+      if (!signers.length) dashboardActiveSignerId = null;
+      else if (!dashboardActiveSignerId || !signers.some(s => s.id === dashboardActiveSignerId)) dashboardActiveSignerId = signers[0].id;
+      const dashSignerId = dashboardActiveSignerId;
+      const opts = signers.map((s, i) => {
+        const short = s.name.length > 22 ? escapeHtml(s.name.slice(0, 20)) + '…' : escapeHtml(s.name);
+        return `<option value="${s.id}"${s.id === dashSignerId ? ' selected' : ''}>Signer ${i + 1} — ${short}</option>`;
+      }).join('');
+      const pal = (kind, iconClass, label, field) => `<div class="drag-item${field ? ' field-item' : ''}" draggable="true" data-palette-kind="${kind}"><span class="pal-icon-box" aria-hidden="true"><i class="fas ${iconClass}"></i></span><span class="label">${label}</span></div>`;
+      return `<aside class="signproz-editor-sidebar" aria-label="Prepare document">
+        <div class="editor-section-head">
+          <div class="sidebar-section pad-x" style="padding-top:10px">
+            <h3>SIGN &amp; EDIT</h3>
+          </div>
+        </div>
+        <div class="sidebar-section pad-x" style="padding-top:6px">
+          ${pal('signature', 'fa-signature', 'My Signature', false)}
+          ${pal('initials', 'fa-font', 'My Initials', false)}
+          ${pal('text', 'fa-i-cursor', 'Text', false)}
+          ${pal('date', 'fa-calendar-alt', 'Date Signed', false)}
+          ${pal('checkmark', 'fa-check-circle', 'Checkmark', false)}
+        </div>
+        <div class="add-fields-block">
+          <div class="sidebar-section pad-x" style="padding-top:0">
+            <h3 style="margin-bottom:10px">ADD FIELDS</h3>
+            <div class="signer-selector">
+              <label for="signer-dropdown" class="sr-only">Assign fields to signer</label>
+              <div class="signer-dropdown-wrap">
+                <span class="signer-dot" aria-hidden="true"></span>
+                <select id="signer-dropdown" aria-label="Signer for new fields">${opts || '<option value="">— Add a signer —</option>'}</select>
+              </div>
+              <button type="button" id="dashEditSignersLink" class="edit-link">Edit Signers</button>
+            </div>
+            ${pal('sig-field', 'fa-signature', 'Signature Field', true)}
+            ${pal('initials-field', 'fa-font', 'Initials Field', true)}
+            ${pal('text-field', 'fa-align-left', 'Text Field', true)}
+            ${pal('date-signed-field', 'fa-calendar-day', 'Date Signed Field', true)}
+            ${pal('checkbox-field', 'fa-check-square', 'Checkbox Field', true)}
+            ${pal('radio-field', 'fa-dot-circle', 'Radio Buttons', true)}
+            ${pal('dropdown-field', 'fa-caret-square-down', 'Dropdown Field', true)}
+            ${pal('attachment-field', 'fa-paperclip', 'Attachment Field', true)}
+            ${pal('name-field', 'fa-id-card', 'Name Field', true)}
+            ${pal('email-field', 'fa-envelope', 'Email Field', true)}
+            ${pal('company-field', 'fa-building', 'Company Field', true)}
+            ${pal('title-field', 'fa-briefcase', 'Title Field', true)}
+          </div>
+        </div>
+        <p class="text-[10px] text-slate-500 px-3 py-3 leading-snug border-t border-slate-100">Drag any item onto the document. You can also use <strong>Add Signature Field</strong> and click the page.</p>
+      </aside>`;
+    }
+
+    function dashboardDocFilterBannerHtml() {
+      const labels = {
+        documents: '',
+        waiting_me: 'View: <strong>Waiting for me</strong> — envelopes where your signature is requested (demo).',
+        waiting_others: 'View: <strong>Waiting for others</strong> — you completed your part; outstanding signers (demo).',
+        signed: 'View: <strong>Signed</strong> — completed agreements in the last 90 days (demo).'
+      };
+      const msg = labels[dashboardSidebarSection] || '';
+      if (!msg) return '';
+      return `<div class="mb-4 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">${msg}</div>`;
+    }
+
+    function dashboardDemoEnvelopes() {
+      const me = (currentUser && currentUser.email) ? currentUser.email : '';
+      return [
+        { id: 'env1', name: 'NDA — Motionworks.pdf', date: 'Apr 18, 2026', status: 'Waiting for others', senderEmail: me, recipientEmail: 'client@acme.com' },
+        { id: 'env2', name: 'Service Agreement.pdf', date: 'Apr 12, 2026', status: 'Signed', senderEmail: me, recipientEmail: 'vendor@vendor.io' },
+        { id: 'env3', name: 'Offer Letter — Draft.docx', date: 'Apr 20, 2026', status: 'Draft', senderEmail: me, recipientEmail: '—' }
+      ];
+    }
+
+    function getFilteredDashboardEnvelopes() {
+      const q = (dashboardEnvelopeSearch || '').trim().toLowerCase();
+      const rows = dashboardDemoEnvelopes();
+      if (!q) return rows;
+      return rows.filter(d => String(d.name || '').toLowerCase().includes(q));
+    }
+
+    function envelopeStatusBadgeClass(status) {
+      if (status === 'Signed') return 'dash-doc-status-signed';
+      if (status === 'Draft') return 'dash-doc-status-draft';
+      return 'dash-doc-status-waiting';
+    }
+
+    function buildDashboardEnvelopeRowsHtml() {
+      return getFilteredDashboardEnvelopes().map(doc => {
+        const st = envelopeStatusBadgeClass(doc.status);
+        return `<div class="dash-doc-row" data-doc-id="${escapeHtml(doc.id)}">
+          <div class="flex items-center gap-4 flex-1 min-w-0">
+            <div class="dash-doc-thumb" aria-hidden="true"><i class="fas fa-file-alt text-xl"></i></div>
+            <div class="flex-1 min-w-0">
+              <h4 class="font-semibold text-gray-800 text-sm sm:text-base truncate">${escapeHtml(doc.name)}</h4>
+              <p class="text-xs text-gray-500 mt-0.5">${escapeHtml(doc.date)}<span class="dash-doc-status ${st}">${escapeHtml(doc.status)}</span></p>
+              <div class="flex flex-wrap gap-4 mt-1 text-xs text-gray-600">
+                <span><i class="fas fa-check-circle text-green-500 mr-1"></i>${escapeHtml(doc.senderEmail)}</span>
+                <span><i class="fas fa-envelope text-blue-500 mr-1"></i>${escapeHtml(doc.recipientEmail)}</span>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <button type="button" class="dash-doc-sign-btn px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 text-gray-700">Sign</button>
+            <button type="button" class="dash-doc-send-btn flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 text-gray-700"><i class="fas fa-paper-plane text-xs text-blue-600"></i>Send for signing</button>
+            <button type="button" class="dash-doc-more-btn p-2 text-gray-500 hover:bg-gray-100 rounded-lg" title="More"><i class="fas fa-ellipsis-v"></i></button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function renderDashboard() {
+      if (!currentUser) return '<div class="p-10 text-center">Please login</div>';
+      const isWorkspace = dashboardMainTab === 'workspace';
+      const isReferrals = dashboardMainTab === 'referrals';
+      const withdrawalStatus = getWithdrawalEligibility();
+      const stripeConnected = currentUser.stripeConnected || stripeConnectStep === 'connected';
+      const sidebar = isWorkspace ? renderDashboardSidebar() : '';
+      const editorSidebar = isWorkspace ? renderDashboardEditorSidebar() : '';
+
+      const subscriberHeader = `<div class="dashboard-subscriber-shell px-3 sm:px-5 pt-4 pb-0">
+        <div class="max-w-[1800px] mx-auto">
+          <div class="flex flex-wrap justify-between items-center gap-3 pb-2">
+            <div>
+              <h2 class="text-2xl font-bold text-slate-900">Subscriber portal</h2>
+              <p class="text-sm text-gray-500">Welcome, ${escapeHtml(currentUser.email)} · Your code: <strong class="bg-gray-100 px-2 py-0.5 rounded font-mono text-sm">${escapeHtml(currentUser.affiliateCode)}</strong></p>
+            </div>
+          </div>
+          <nav class="dashboard-tabs" role="tablist" aria-label="Subscriber portal sections">
+            <button type="button" role="tab" class="dashboard-tab" aria-selected="${isWorkspace}" data-dashboard-tab="workspace">Document Workspace</button>
+            <button type="button" role="tab" class="dashboard-tab" aria-selected="${isReferrals}" data-dashboard-tab="referrals">Referrals &amp; Rewards</button>
+          </nav>
+        </div>
+      </div>`;
+
+      const referralsGrid = `<div class="grid lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-5">
+          <div class="referral-stats-card rounded-2xl p-6 shadow-sm">
+            <h3 class="font-bold text-lg flex items-center gap-2"><i class="fas fa-gift text-purple-600"></i> Referrals &amp; Rewards</h3>
+            <button type="button" data-nav="affiliate" class="text-blue-600 text-sm underline mb-4 inline-block">View program details →</button>
+            <p class="text-xs text-gray-400 mb-2">Live stats from API</p>
+            <div class="grid grid-cols-2 gap-4 mt-2">
+              <div class="bg-white rounded-xl p-3 text-center"><div id="dash-api-total-referrals" class="text-3xl font-bold text-gray-800">…</div><div class="text-xs text-gray-500">Total referrals</div></div>
+              <div class="bg-white rounded-xl p-3 text-center"><div id="dash-api-active-accounts" class="text-3xl font-bold text-green-600">…</div><div class="text-xs text-gray-500">Active (paid accounts)</div></div>
+              <div class="bg-white rounded-xl p-3 text-center"><div id="dash-api-expected-payout" class="text-3xl font-bold text-blue-600">…</div><div class="text-xs text-gray-500">Expected payout</div></div>
+              <div class="bg-white rounded-xl p-3 text-center"><div class="text-3xl font-bold text-gray-800">$${currentUser.referralEarnings.toFixed(2)}</div><div class="text-xs text-gray-500">Paid out</div></div>
+            </div>
+            <div class="mt-4 flex items-center justify-between bg-white rounded-xl p-3"><span class="text-sm font-medium">Tier:</span><span id="dash-api-tier-badge" class="px-3 py-1 rounded-full text-white text-sm tier-bronze">…</span></div>
+            <div class="mt-4 text-xs text-gray-500 text-center">Next payout: 15th of next month • Min. $50</div>
+            <div class="mt-4 bg-white rounded-xl p-3 border border-gray-100 space-y-2">
+              <div class="text-xs text-gray-600">Withdrawable now: <strong class="text-gray-900">$${withdrawalStatus.amount.toFixed(2)}</strong></div>
+              <div class="text-xs ${withdrawalStatus.eligible ? 'text-green-700' : 'text-amber-700'}">${withdrawalStatus.eligible ? 'Withdrawal available today.' : escapeHtml(withdrawalStatus.reason)}</div>
+              <button type="button" id="requestWithdrawalBtn" class="w-full px-3 py-2 rounded-lg text-sm font-semibold ${withdrawalStatus.eligible && stripeConnected ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-gray-100 text-gray-500 cursor-not-allowed'}" ${withdrawalStatus.eligible && stripeConnected ? '' : 'disabled'}><i class="fas fa-wallet mr-1"></i> Withdraw earnings</button>
+            </div>
+            <div class="mt-3 bg-white rounded-xl p-3 border border-gray-100 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-medium text-gray-800">Stripe payouts</span>
+                <span class="text-xs px-2 py-0.5 rounded-full ${stripeConnected ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}">${stripeConnected ? 'Connected' : 'Not connected'}</span>
+              </div>
+              <p class="text-xs text-gray-500">2-click setup: connect Stripe, then confirm.</p>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button type="button" id="stripeConnectStep1Btn" class="px-3 py-2 rounded-lg text-sm font-medium border ${stripeConnected ? 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed' : 'border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100'}" ${stripeConnected ? 'disabled' : ''}>1) Connect Stripe</button>
+                <button type="button" id="stripeConnectStep2Btn" class="px-3 py-2 rounded-lg text-sm font-medium border ${stripeConnected ? 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed' : stripeConnectStep === 'pending' ? 'border-indigo-300 text-indigo-800 bg-indigo-100 hover:bg-indigo-200' : 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed'}" ${stripeConnected || stripeConnectStep !== 'pending' ? 'disabled' : ''}>2) Confirm connection</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="lg:col-span-7 bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+          <h3 class="font-bold mb-3"><i class="fas fa-chart-line text-blue-600"></i> 3-Year Earnings Projection</h3>
+          <p class="text-xs text-gray-500 mb-3">Based on realistic part-time effort (1-2 hours/week). Assumes 20% commission, upgrading to 30% over time.</p>
+          <table class="w-full text-sm projection-table">
+            <thead><tr class="bg-gray-50"><th class="text-left p-2">Year</th><th class="text-left p-2">New Referrals</th><th class="text-left p-2">Total</th><th class="text-left p-2">Earnings</th><th class="text-left p-2">Avg Monthly</th><th class="text-left p-2">End Monthly</th></tr></thead>
+            <tbody>
+              <tr><td class="p-2 font-medium">Year 1</td><td class="p-2">${revenueProjection.year1.newReferrals}</td><td class="p-2">${revenueProjection.year1.totalReferrals}</td><td class="p-2 text-green-700 font-semibold">$${revenueProjection.year1.earnings}</td><td class="p-2">$${revenueProjection.year1.avgMonthly}</td><td class="p-2">$${revenueProjection.year1.endMonthly}</td></tr>
+              <tr><td class="p-2 font-medium">Year 2</td><td class="p-2">${revenueProjection.year2.newReferrals}</td><td class="p-2">${revenueProjection.year2.totalReferrals}</td><td class="p-2 text-green-700 font-semibold">$${revenueProjection.year2.earnings}</td><td class="p-2">$${revenueProjection.year2.avgMonthly}</td><td class="p-2">$${revenueProjection.year2.endMonthly}</td></tr>
+              <tr><td class="p-2 font-medium">Year 3</td><td class="p-2">${revenueProjection.year3.newReferrals}</td><td class="p-2">${revenueProjection.year3.totalReferrals}</td><td class="p-2 text-green-700 font-semibold">$${revenueProjection.year3.earnings}</td><td class="p-2">$${revenueProjection.year3.avgMonthly}</td><td class="p-2">$${revenueProjection.year3.endMonthly}</td></tr>
+              <tr class="bg-blue-50"><td class="p-2 font-bold">TOTAL</td><td class="p-2">${revenueProjection.total.referrals}</td><td class="p-2"></td><td class="p-2 font-bold text-blue-700">$${revenueProjection.total.earnings}</td><td class="p-2"></td><td class="p-2 font-bold">~$${revenueProjection.year3.endMonthly}/mo</td></tr>
+            </tbody>
+          </table>
+          <div class="mt-3 bg-green-50 p-3 rounded-lg"><p class="text-xs text-green-800"><i class="fas fa-info-circle"></i> <strong>Non-aggressive projection:</strong> Part-time effort (1-2 hours/week). Double these numbers with full-time effort (5-10 hours/week). Commissions increase as you tier up to 30%.</p></div>
+        </div>
+      </div>`;
+
+      const referralsPanel = `<div class="max-w-7xl mx-auto px-2 sm:px-4 py-6">
+        <div class="flex flex-wrap justify-between items-start gap-4 mb-6">
+          <p class="text-sm text-gray-600 max-w-xl">Track live referral stats, expected payouts, and a long-range earnings projection.</p>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" id="copyAffiliateLinkBtn" class="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-medium"><i class="fas fa-link"></i> Copy Referral Link</button>
+            <button type="button" id="sampleDataBtn" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm font-medium"><i class="fas fa-chart-line"></i> Load Sample</button>
+          </div>
+        </div>
+        ${referralsGrid}
+        <div class="mt-8 bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+          <h3 class="font-bold text-gray-900 mb-2">Recent referral activity</h3>
+          <p class="text-xs text-gray-500 mb-3">Use <strong>Load sample</strong> above to populate this list.</p>
+          <div id="referralsList" class="space-y-2"></div>
+        </div>
+      </div>`;
+
+      const workspacePanel = `<div class="max-w-7xl mx-auto px-2 sm:px-4 py-6">
+        ${dashboardDocFilterBannerHtml()}
+        <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm mb-6">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <h3 class="font-bold text-lg text-gray-900"><i class="fas fa-folder-open text-blue-600 mr-2"></i>Documents</h3>
+            <div class="relative w-full sm:max-w-xs sm:ml-auto">
+              <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
+              <input type="search" id="workspaceEnvelopeSearch" class="w-full border border-gray-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none" placeholder="Search documents…" value="${escapeHtml(dashboardEnvelopeSearch)}" autocomplete="off">
+            </div>
+          </div>
+          <div id="workspaceEnvelopeList">${buildDashboardEnvelopeRowsHtml()}</div>
+        </div>
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+          <h3 class="font-bold mb-3 text-gray-900"><i class="fas fa-file-signature text-blue-600 mr-2"></i>Prepare &amp; send</h3>
+          <div class="flex gap-2 mb-4 flex-wrap items-center">
+            <button type="button" id="toggleAddModeBtn" class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm"><i class="fas fa-plus"></i> Add Signature Field</button>
+            <button type="button" id="resetDocumentBtn" class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">Clear Fields</button>
+            <button type="button" id="sendDocBtn" class="btn-primary text-white px-4 py-1 rounded-full text-sm">Finalize Document</button>
+            <button type="button" id="openAiAgreementFromWorkspaceBtn" class="bg-violet-100 text-violet-800 border border-violet-200 px-3 py-1 rounded-full text-sm font-medium hover:bg-violet-200"><i class="fas fa-magic mr-1" aria-hidden="true"></i> AI agreement review</button>
+            <button type="button" id="openAiTemplateFromWorkspaceBtn" class="bg-teal-100 text-teal-800 border border-teal-200 px-3 py-1 rounded-full text-sm font-medium hover:bg-teal-200"><i class="fas fa-file-circle-plus mr-1" aria-hidden="true"></i> AI generate template</button>
+          </div>
+          <div id="documentPreview" class="relative min-h-[300px] p-6 bg-gray-50 rounded-xl border" style="background-image: radial-gradient(#e5e7eb 0.5px, transparent 0.5px);">
+            <div class="prose max-w-none text-sm pointer-events-none"><p class="text-center text-gray-400">Drag tiles from <strong>Sign &amp; Edit</strong> / <strong>Add fields</strong>, or turn on <strong>Add Signature Field</strong> and click the page.</p></div>
+            <div id="dynamicFieldsContainer" class="absolute inset-0 p-6 pointer-events-none"></div>
+          </div>
+          <div id="signersList" class="mt-3 flex flex-wrap gap-2"></div>
+          <button type="button" id="addSignerBtn" class="mt-2 text-xs bg-gray-100 px-3 py-1 rounded-full">+ Add Signer</button>
+          <div class="mt-3 text-xs text-gray-400">Audit log available in full version.</div>
+        </div>
+      </div>`;
+
+      const mainInner = isWorkspace ? workspacePanel : referralsPanel;
+      return `<div class="dashboard-portal-wrapper flex flex-col w-full max-w-[1800px] mx-auto">
+        ${subscriberHeader}
+        <div class="flex flex-col lg:flex-row flex-1 min-w-0 items-stretch">
+          ${sidebar}${editorSidebar}
+          <div class="dashboard-main-area flex-1 min-w-0 w-full bg-gradient-to-br from-slate-50/50 to-transparent">${mainInner}</div>
+        </div>
+      </div>`;
+    }
+
+    function renderDashboardContent() {
+      if (activePage !== 'dashboard') return;
+      const referralsContainer = document.getElementById('referralsList');
+      if (referralsContainer && affiliateReferrals.length > 0) {
+        referralsContainer.innerHTML = affiliateReferrals.map(r => `<div class="flex justify-between items-center bg-gray-50 p-2 rounded-lg text-sm"><div><span class="font-medium">${escapeHtml(r.email)}</span><div class="text-xs text-gray-400">${r.date}</div></div><div><span class="px-2 py-0.5 rounded-full text-xs ${r.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">${r.status === 'active' ? 'Active' : 'Pending'}</span></div><div class="text-green-600 font-semibold">$${r.earnings.toFixed(2)}</div></div>`).join('');
+      }
+      
+      const fieldsContainer = document.getElementById('dynamicFieldsContainer');
+      if (fieldsContainer) renderFieldsOnDocument(fieldsContainer);
+      
+      const signersContainer = document.getElementById('signersList');
+      if (signersContainer && signers.length) {
+        signersContainer.innerHTML = signers.map(s => `<span class="bg-gray-100 px-2 py-1 rounded-full text-xs">${escapeHtml(s.name)} <button type="button" class="remove-signer-dash text-red-400 ml-1" data-id="${s.id}"><i class="fas fa-times"></i></button></span>`).join('');
+        document.querySelectorAll('.remove-signer-dash').forEach(btn => btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const id = btn.getAttribute('data-id');
+          signers = signers.filter(s => s.id !== id);
+          if (!signers.length) dashboardActiveSignerId = null;
+          else if (!signers.some(s => s.id === dashboardActiveSignerId)) dashboardActiveSignerId = signers[0].id;
+          renderApp();
+        }));
+      }
+    }
+
+    function initDashboardEvents() {
+      document.querySelectorAll('[data-dashboard-tab]').forEach((btn) => {
+        btn.onclick = () => {
+          const t = btn.getAttribute('data-dashboard-tab');
+          if (t === 'workspace' || t === 'referrals') {
+            dashboardMainTab = t;
+            renderApp();
+          }
+        };
+      });
+
+      const searchEl = document.getElementById('workspaceEnvelopeSearch');
+      if (searchEl) {
+        searchEl.oninput = () => {
+          dashboardEnvelopeSearch = searchEl.value;
+          const list = document.getElementById('workspaceEnvelopeList');
+          if (list) list.innerHTML = buildDashboardEnvelopeRowsHtml();
+        };
+      }
+
+      const envelopeList = document.getElementById('workspaceEnvelopeList');
+      if (envelopeList) {
+        envelopeList.onclick = (e) => {
+          const signB = e.target.closest && e.target.closest('.dash-doc-sign-btn');
+          const sendB = e.target.closest && e.target.closest('.dash-doc-send-btn');
+          const moreB = e.target.closest && e.target.closest('.dash-doc-more-btn');
+          if (signB) { e.preventDefault(); alert('Demo: Sign opens the signing experience for this envelope.'); }
+          else if (sendB) { e.preventDefault(); alert('Demo: Send for signing queues recipients and email reminders.'); }
+          else if (moreB) { e.preventDefault(); alert('Demo: More actions — rename, duplicate, download, or remove.'); }
+        };
+      }
+
+      const container = document.getElementById('documentPreview');
+      
+      const toggleBtn = document.getElementById('toggleAddModeBtn');
+      if (toggleBtn) toggleBtn.onclick = () => { addFieldMode = !addFieldMode; document.getElementById('addModeBadge')?.classList.toggle('hidden'); };
+      
+      const sendBtn = document.getElementById('sendDocBtn');
+      if (sendBtn) sendBtn.onclick = () => {
+        if (signatureFields.length === 0) { alert('Add fields to the document first.'); return; }
+        if (!signatureFields.every(fieldIsCompleteForSend)) { alert('Complete every field (sign, fill text, check boxes, etc.) before finalizing.'); return; }
+        checkDocumentCompletion();
+      };
+      
+      const resetBtn = document.getElementById('resetDocumentBtn');
+      if (resetBtn) resetBtn.onclick = () => { signatureFields = []; renderDashboardContent(); addAudit("Reset document fields."); };
+      
+      const copyBtn = document.getElementById('copyAffiliateLinkBtn');
+      if (copyBtn) copyBtn.onclick = () => { const link = `https://signflow.app/?ref=${currentUser.affiliateCode}`; navigator.clipboard.writeText(link); alert('Referral link copied! Share it to earn 20-30% recurring commissions.'); };
+      
+      const sampleBtn = document.getElementById('sampleDataBtn');
+      if (sampleBtn) sampleBtn.onclick = () => loadSampleAffiliateData();
+
+      const stripeStep1Btn = document.getElementById('stripeConnectStep1Btn');
+      if (stripeStep1Btn) stripeStep1Btn.onclick = () => startStripeConnectFlow();
+
+      const stripeStep2Btn = document.getElementById('stripeConnectStep2Btn');
+      if (stripeStep2Btn) stripeStep2Btn.onclick = () => confirmStripeConnectFlow();
+
+      const withdrawalBtn = document.getElementById('requestWithdrawalBtn');
+      if (withdrawalBtn) withdrawalBtn.onclick = () => requestAffiliateWithdrawal();
+      
+      document.getElementById('addSignerBtn')?.addEventListener('click', () => {
+        const name = prompt('Signer name');
+        if (!name) return;
+        signers.push({ id: genId(), name, email: name.toLowerCase().replace(/\s+/g, '') + '@example.com' });
+        dashboardActiveSignerId = signers[signers.length - 1].id;
+        renderApp();
+      });
+      
+      if (container && !container._signprozFieldClickBound) {
+        container._signprozFieldClickBound = true;
+        container.addEventListener('click', (e) => { if(!addFieldMode) return; const rect = document.getElementById('dynamicFieldsContainer').getBoundingClientRect(); const x = ((e.clientX - rect.left)/rect.width)*100; const y = ((e.clientY - rect.top)/rect.height)*100; if(x>=0 && x<=100 && y>=0 && y<=100) addSignatureFieldAt(x,y); });
+      }
+
+      const dashFileInput = document.getElementById('dashSidebarFileInput');
+      const dashUploadBtn = document.getElementById('dashUploadDocBtn');
+      if (dashUploadBtn && dashFileInput) {
+        dashUploadBtn.onclick = () => dashFileInput.click();
+        dashFileInput.onchange = () => {
+          const files = dashFileInput.files;
+          if (files && files.length) {
+            const names = Array.from(files).map(f => f.name).join(', ');
+            addAudit('📎 Upload queued (demo): ' + names);
+          }
+          dashFileInput.value = '';
+        };
+      }
+      const cloudToggle = document.getElementById('dashCloudToggle');
+      const cloudMenu = document.getElementById('dashCloudMenu');
+      if (cloudToggle && cloudMenu) {
+        cloudToggle.onclick = (ev) => {
+          ev.stopPropagation();
+          const open = cloudMenu.classList.toggle('open');
+          cloudToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        };
+        cloudMenu.querySelectorAll('.dash-cloud-pick').forEach((btn) => {
+          btn.onclick = (ev) => {
+            ev.stopPropagation();
+            cloudMenu.classList.remove('open');
+            cloudToggle.setAttribute('aria-expanded', 'false');
+            const which = btn.getAttribute('data-cloud');
+            const label = which === 'gdrive' ? 'Google Drive' : which === 'dropbox' ? 'Dropbox' : 'Box';
+            addAudit('☁️ Cloud import selected (demo): ' + label);
+            alert('Demo: connect ' + label + ' under Integrations in a production workspace.');
+          };
+        });
+      }
+      document.querySelectorAll('[data-dash-section]').forEach((btn) => {
+        btn.onclick = () => {
+          const sec = btn.getAttribute('data-dash-section');
+          if (sec) { dashboardSidebarSection = sec; renderApp(); }
+        };
+      });
+      const bulkSidebar = document.getElementById('dashSidebarBulkSend');
+      if (bulkSidebar) bulkSidebar.onclick = () => openBulkSendModal();
+      document.getElementById('dashSidebarTeamBtn')?.addEventListener('click', () => alert('Demo: Team — shared workspaces, roles, and SSO appear here in the full product.'));
+      document.getElementById('dashSidebarAiBtn')?.addEventListener('click', () => openAiAgreementModal());
+      document.getElementById('openAiAgreementFromWorkspaceBtn')?.addEventListener('click', () => openAiAgreementModal());
+      document.getElementById('openAiTemplateFromWorkspaceBtn')?.addEventListener('click', () => openAiTemplateModal());
+
+      const signerSel = document.getElementById('signer-dropdown');
+      if (signerSel) {
+        signerSel.addEventListener('change', () => {
+          dashboardActiveSignerId = signerSel.value || null;
+        });
+      }
+      document.getElementById('dashEditSignersLink')?.addEventListener('click', () => {
+        const el = document.getElementById('addSignerBtn');
+        if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); el.focus(); }
+        const name = prompt('Add another signer (optional). Leave empty to scroll only.');
+        if (name && name.trim()) {
+          signers.push({ id: genId(), name: name.trim(), email: name.trim().toLowerCase().replace(/\s+/g, '') + '@example.com' });
+          dashboardActiveSignerId = signers[signers.length - 1].id;
+          renderApp();
+        }
+      });
+
+      document.querySelectorAll('.signproz-editor-sidebar .drag-item[draggable="true"]').forEach((el) => {
+        el.addEventListener('dragstart', (e) => {
+          const k = el.getAttribute('data-palette-kind') || 'signature';
+          e.dataTransfer.setData('application/x-signproz-field', k);
+          e.dataTransfer.setData('text/plain', k);
+          e.dataTransfer.effectAllowed = 'copy';
+          document.getElementById('documentPreview')?.classList.add('document-drop-target');
+        });
+        el.addEventListener('dragend', () => {
+          document.getElementById('documentPreview')?.classList.remove('document-drop-target');
+        });
+      });
+
+      const preview = document.getElementById('documentPreview');
+      if (preview && !preview._signprozDropBound) {
+        preview._signprozDropBound = true;
+        preview.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'copy';
+        });
+        preview.addEventListener('drop', (e) => {
+          const rawKind = e.dataTransfer.getData('application/x-signproz-field') || e.dataTransfer.getData('text/plain');
+          if (!rawKind || !isPaletteDragPayload(rawKind)) return;
+          e.preventDefault();
+          preview.classList.remove('document-drop-target');
+          const inner = document.getElementById('dynamicFieldsContainer');
+          if (!inner) return;
+          const rect = inner.getBoundingClientRect();
+          if (rect.width <= 0 || rect.height <= 0) return;
+          const x = ((e.clientX - rect.left) / rect.width) * 100;
+          const y = ((e.clientY - rect.top) / rect.height) * 100;
+          if (x < -2 || x > 102 || y < -2 || y > 102) return;
+          addDocumentFieldAt(x, y, rawKind);
+        });
+      }
+
+      renderDashboardContent();
+      if (document.getElementById('dash-api-total-referrals')) fetchReferralStatsFromApi();
+    }
+
+    function attachGlobalEvents() {
+      document.querySelectorAll('.nav-link, [data-nav]').forEach(el => { if(!el.hasListener) { el.addEventListener('click', (e) => { const page = el.getAttribute('data-nav'); if(page) setActivePage(page); }); el.hasListener=true; } });
+      document.querySelectorAll('.use-template-btn').forEach(el => { if(!el.hasListener) { el.addEventListener('click', (e) => { const tid = el.getAttribute('data-id'); if(tid && currentUser) { loadTemplate(tid); setActivePage('dashboard'); } else if(tid && !currentUser) alert('Please sign in first'); }); el.hasListener=true; } });
+      document.getElementById('openAiFaqFromHomeBtn')?.addEventListener('click', () => openAiFaqModal());
+      document.getElementById('openAiFaqFromFeatureBtn')?.addEventListener('click', () => openAiFaqModal());
+      document.getElementById('openAiFaqBubbleBtn')?.addEventListener('click', () => openAiFaqModal());
+      
+      const logout = document.getElementById('logoutBtn'); if(logout && !logout.hasListener) { logout.addEventListener('click', handleLogout); logout.hasListener=true; }
+      const loginBtn = document.getElementById('doLoginBtn'); if(loginBtn) loginBtn.onclick = () => { const email = document.getElementById('loginEmail')?.value; if(email) handleLogin(email); };
+      const signupBtn = document.getElementById('doSignupBtn'); if(signupBtn) signupBtn.onclick = () => { const email = document.getElementById('signupEmail')?.value; if(email) handleSignup(email, 'pass', 'free'); };
+      const upgradePricing = document.getElementById('upgradeUnlimitedPricingBtn'); if(upgradePricing) upgradePricing.onclick = () => { if(currentUser) upgradeToUnlimited(); else alert("Sign up first"); };
+      const upgradePremium = document.getElementById('upgradePremiumPricingBtn'); if(upgradePremium) upgradePremium.onclick = () => { if(currentUser) upgradeToPremium(); else alert("Sign up first"); };
+      const upgradeEnterprise = document.getElementById('upgradeEnterprisePricingBtn'); if(upgradeEnterprise) upgradeEnterprise.onclick = () => { if(currentUser) upgradeToEnterprise(); else alert("Sign up first"); };
+      const pricingYearlyToggle = document.getElementById('pricingYearlyToggle');
+      if (pricingYearlyToggle) pricingYearlyToggle.onclick = () => { pricingBillingCycle = 'yearly'; renderApp(); };
+      const pricingMonthlyToggle = document.getElementById('pricingMonthlyToggle');
+      if (pricingMonthlyToggle) pricingMonthlyToggle.onclick = () => { pricingBillingCycle = 'monthly'; renderApp(); };
+    }
+
+    window.addEventListener('popstate', () => { setActivePage(syncRouteFromHash(), false); });
+    window.addEventListener('hashchange', () => { setActivePage(syncRouteFromHash(), false); });
+    window.addEventListener('navigate', (e) => setActivePage(e.detail));
+    renderApp();
+  </script>
+</body>
+</html>
