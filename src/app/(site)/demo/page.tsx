@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 export const metadata = {
   title: 'Features Demo - SignProz',
   description: 'Explore SignProz features: subscriber dashboard, admin backend, document signing, and notifications.',
@@ -7,13 +9,25 @@ export default function DemoPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Nav */}
-      <header className="bg-white border-b">
-        <nav className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <a href="/" className="text-xl font-bold text-blue-600">SignProz</a>
-          <div className="flex gap-6 items-center">
-            <a href="/pricing" className="text-sm text-gray-600 hover:text-gray-900">Pricing</a>
-            <a href="/demo" className="text-sm text-gray-600 hover:text-gray-900">Demo</a>
-            <a href="/login" className="text-sm bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Sign In</a>
+      <header className="bg-white/80 backdrop-blur-md border-b sticky top-0 z-30">
+        <nav className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap justify-between items-center gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Link href="/" className="flex items-center gap-2 cursor-pointer">
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-700 w-9 h-9 rounded-xl flex items-center justify-center shadow">
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+              </div>
+              <span className="font-bold text-xl tracking-tight"><span className="text-blue-600">Sign</span><span className="text-indigo-600">Proz</span></span>
+            </Link>
+            <Link href="/affiliate" className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full hover:bg-green-200 font-medium">Affiliate Program</Link>
+          </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <Link href="/" className="text-gray-600 hover:text-blue-600 text-sm font-medium">Home</Link>
+            <Link href="/pricing" className="text-gray-600 hover:text-blue-600 text-sm font-medium">Pricing</Link>
+            <Link href="/templates" className="text-gray-600 hover:text-blue-600 text-sm font-medium">Templates</Link>
+            <Link href="/login" className="text-gray-600 hover:text-blue-600 text-sm font-medium">Sign In</Link>
+            <Link href="/signup" className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">Start Free</Link>
           </div>
         </nav>
       </header>

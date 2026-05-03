@@ -1,6 +1,8 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
+import { AiFaqModal } from '@/components/modals'
 
 const keyFeatures = [
   'Document Workspace',
@@ -71,18 +73,30 @@ const CommentIcon = () => (
 )
 
 export default function HomePage() {
+  const [faqOpen, setFaqOpen] = useState(false)
+
   return (
     <div className="min-h-screen bg-white font-sans">
       {/* Navigation */}
-      <header className="bg-white border-b border-slate-200">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="text-xl font-bold text-indigo-600">SignProz</Link>
-          <div className="flex gap-6 items-center">
-            <Link href="/" className="text-sm font-medium text-slate-600 hover:text-slate-900">Home</Link>
-            <Link href="/pricing" className="text-sm font-medium text-slate-600 hover:text-slate-900">Pricing</Link>
-            <Link href="/templates" className="text-sm font-medium text-slate-600 hover:text-slate-900">Templates</Link>
-            <Link href="/login" className="text-sm font-medium text-slate-600 hover:text-slate-900">Sign In</Link>
-            <Link href="/signup" className="text-sm bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-indigo-700">Sign Up</Link>
+      <header className="bg-white/80 backdrop-blur-md border-b sticky top-0 z-30">
+        <nav className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap justify-between items-center gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Link href="/" className="flex items-center gap-2 cursor-pointer">
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-700 w-9 h-9 rounded-xl flex items-center justify-center shadow">
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+              </div>
+              <span className="font-bold text-xl tracking-tight"><span className="text-blue-600">Sign</span><span className="text-indigo-600">Proz</span></span>
+            </Link>
+            <Link href="/affiliate" className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full hover:bg-green-200 font-medium">Affiliate Program</Link>
+          </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <Link href="/" className="text-gray-600 hover:text-blue-600 text-sm font-medium">Home</Link>
+            <Link href="/pricing" className="text-gray-600 hover:text-blue-600 text-sm font-medium">Pricing</Link>
+            <Link href="/templates" className="text-gray-600 hover:text-blue-600 text-sm font-medium">Templates</Link>
+            <Link href="/login" className="text-gray-700 text-sm font-medium">Sign In</Link>
+            <Link href="/signup" className="bg-blue-600 text-white px-4 py-1.5 rounded-full text-sm shadow hover:bg-blue-700">Start Free</Link>
           </div>
         </nav>
       </header>
@@ -94,13 +108,13 @@ export default function HomePage() {
             <div className="grid lg:grid-cols-12 gap-8 items-center">
               <div className="lg:col-span-7">
                 <p className="text-xs uppercase tracking-[0.16em] text-indigo-200 font-semibold mb-3">Secure eSignature platform</p>
-                <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight">Professional agreement workflows for modern teams</h1>
+                <h1 className="text-4xl sm:text-5xl font-extrabold" style={{ lineHeight: '48px', maxHeight: '96px', overflow: 'hidden' }}>Professional agreement workflows for modern teams</h1>
                 <p className="text-indigo-100 text-sm sm:text-base mt-4 max-w-2xl">SignProz helps you prepare, send, sign, and track agreements at scale while offering partner rewards and API-ready automation.</p>
                 <div className="mt-7 flex flex-wrap gap-3">
                   <Link href="/signup" className="bg-white text-indigo-800 px-5 py-2.5 rounded-xl font-semibold text-sm shadow hover:bg-indigo-50">Start free trial</Link>
                   <Link href="/pricing" className="border border-white/30 bg-white/10 text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-white/20">View pricing</Link>
                   <Link href="/templates" className="border border-white/30 bg-white/10 text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-white/20">Explore templates</Link>
-                  <button type="button" className="border border-cyan-200/60 bg-cyan-400/20 text-cyan-50 px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-cyan-400/30">AI FAQ Chat</button>
+                  <button type="button" onClick={() => setFaqOpen(true)} className="border border-cyan-200/60 bg-cyan-400/20 text-cyan-50 px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-cyan-400/30">AI FAQ Chat</button>
                 </div>
               </div>
               <div className="lg:col-span-5">
@@ -260,19 +274,18 @@ export default function HomePage() {
                 </h3>
                 <p className="text-sm text-slate-600 max-w-2xl">Get quick, practical answers about integrations, compliance, API usage, pricing, and signing workflows.</p>
               </div>
-              <button type="button" className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-indigo-700">Open AI FAQ</button>
+              <button type="button" onClick={() => setFaqOpen(true)} className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-indigo-700">Open AI FAQ</button>
             </div>
           </section>
         </div>
 
         {/* AI FAQ Floating Bubble */}
-        <button type="button" className="home-faq-bubble">
+        <button type="button" onClick={() => setFaqOpen(true)} className="home-faq-bubble">
           <span className="mr-1"><CommentIcon /></span>
           AI FAQ
         </button>
       </main>
 
-      {/* Footer */}
       <footer className="border-t border-slate-200 py-8 text-center text-sm text-slate-500">
         <p>© 2026 SignProz. All rights reserved.</p>
         <div className="flex justify-center gap-6 mt-2">
@@ -280,6 +293,7 @@ export default function HomePage() {
           <Link href="/terms" className="hover:text-slate-700">Terms of Service</Link>
         </div>
       </footer>
+      <AiFaqModal isOpen={faqOpen} onClose={() => setFaqOpen(false)} />
     </div>
   )
 }
