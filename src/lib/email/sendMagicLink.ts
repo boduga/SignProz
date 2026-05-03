@@ -1,7 +1,10 @@
 import { Resend } from 'resend'
 import { MagicLinkEmail } from './templates/MagicLinkEmail'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+function getResend() {
+  if (!process.env.RESEND_API_KEY) throw new Error('RESEND_API_KEY not configured')
+  return new Resend(process.env.RESEND_API_KEY)
+}
 
 interface Signer {
   id: string
@@ -21,6 +24,7 @@ export async function sendMagicLinkEmail(
   document: Document,
   ownerEmail: string
 ) {
+  const resend = getResend()
   const magicUrl = `${process.env.NEXT_PUBLIC_APP_URL}/sign/${document.id}?token=${signer.magic_token}`
 
   const { error } = await resend.emails.send({

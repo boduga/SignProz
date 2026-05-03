@@ -9,7 +9,7 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Email and password are required' }, { status: 400 })
     }
 
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 

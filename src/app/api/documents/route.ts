@@ -4,7 +4,7 @@ import { addAuditLog } from '@/lib/utils'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
   const { data: { session } } = await supabase.auth.getSession()
 
   if (!session) {
@@ -38,7 +38,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
   const supabaseAdmin = createAdminClient()
   const { data: { session } } = await supabase.auth.getSession()
 

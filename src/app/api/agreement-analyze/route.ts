@@ -1,9 +1,12 @@
 import { Anthropic } from '@anthropic-ai/sdk'
 import { NextResponse } from 'next/server'
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
-
 const SYSTEM_PROMPT = `You are a legal document analyst. Analyze the provided document text and return a structured JSON response. Always return valid JSON matching the exact schema. Focus on: key obligations, deadlines, parties involved, risky clauses (indemnification, liability caps, auto-renewal, termination traps), and recommended actions for a signer.`
+
+function getAnthropic() {
+  if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY not configured')
+  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+}
 
 export async function POST(request: Request) {
   const { content } = await request.json()
@@ -13,6 +16,8 @@ export async function POST(request: Request) {
   }
 
   const truncated = content.slice(0, 10000)
+
+  const anthropic = getAnthropic()
 
   const message = await anthropic.messages.create({
     model: 'claude-sonnet-4-20250514',

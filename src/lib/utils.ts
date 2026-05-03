@@ -1,5 +1,6 @@
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { v4 as uuidv4 } from 'uuid'
-import { createAdminClient } from '../supabase/admin'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export function generateMagicToken(): string {
   return uuidv4()

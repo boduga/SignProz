@@ -8,7 +8,7 @@ interface RouteParams {
 
 export async function GET(request: Request, { params }: RouteParams) {
   const { id } = await params
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
   const { data: { session } } = await supabase.auth.getSession()
 
   if (!session) {
@@ -31,7 +31,7 @@ export async function GET(request: Request, { params }: RouteParams) {
 
 export async function PUT(request: Request, { params }: RouteParams) {
   const { id } = await params
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
   const supabaseAdmin = createAdminClient()
   const { data: { session } } = await supabase.auth.getSession()
 
@@ -77,7 +77,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
 
 export async function DELETE(request: Request, { params }: RouteParams) {
   const { id } = await params
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
   const supabaseAdmin = createAdminClient()
   const { data: { session } } = await supabase.auth.getSession()
 

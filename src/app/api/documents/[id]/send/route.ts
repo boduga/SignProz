@@ -10,7 +10,7 @@ interface RouteParams {
 
 export async function POST(request: Request, { params }: RouteParams) {
   const { id } = await params
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
   const supabaseAdmin = createAdminClient()
   const { data: { session } } = await supabase.auth.getSession()
 

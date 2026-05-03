@@ -23,6 +23,7 @@ export function MagicLinkEmail({
   signerName,
   documentTitle,
   magicUrl,
+  ownerEmail,
   expiresIn,
 }: MagicLinkEmailProps) {
   return (

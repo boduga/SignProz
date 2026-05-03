@@ -2,9 +2,11 @@
 
 import { createContext, useContext } from 'react'
 import { createBrowserClient } from '@/lib/supabase/browser'
+import { useState, useEffect } from 'react'
 
 interface SupabaseContextValue {
-  supabase: ReturnType<typeof createBrowserClient>
+  supabase: ReturnType<typeof createBrowserClient> | null
+  isLoading: boolean
 }
 
 const SupabaseContext = createContext<SupabaseContextValue | null>(null)
@@ -16,10 +18,16 @@ export function useSupabase() {
 }
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  const supabase = createBrowserClient()
+  const [supabase, setSupabase] = useState<ReturnType<typeof createBrowserClient> | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    setSupabase(createBrowserClient())
+    setIsLoading(false)
+  }, [])
 
   return (
-    <SupabaseContext.Provider value={{ supabase }}>
+    <SupabaseContext.Provider value={{ supabase, isLoading }}>
       {children}
     </SupabaseContext.Provider>
   )

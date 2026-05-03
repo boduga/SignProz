@@ -1,6 +1,9 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+function getResend() {
+  if (!process.env.RESEND_API_KEY) return null
+  return new Resend(process.env.RESEND_API_KEY)
+}
 
 interface ExpiredLinkPayload {
   documentId: string
@@ -12,6 +15,8 @@ interface ExpiredLinkPayload {
 }
 
 export async function sendExpiredLinkNotification(payload: ExpiredLinkPayload) {
+  const resend = getResend()
+  if (!resend) return
   const { error } = await resend.emails.send({
     from: 'SignProz <noreply@signproz.com>',
     to: payload.ownerEmail,
