@@ -6,11 +6,14 @@ import Link from 'next/link'
 
 type Tab = 'workspace' | 'referrals'
 
+type DocFilter = 'documents' | 'waiting_me' | 'waiting_others' | 'signed'
+
 interface Doc {
   id: string
   title: string
   status: string
   created_at: string
+  signers?: Array<{ email: string; name?: string; signed_at?: string | null }>
 }
 
 interface Session {
@@ -37,6 +40,48 @@ const recentReferrals = [
   { email: 'legal@enterprise.co', plan: 'Enterprise', earnings: 124.75, status: 'active' },
 ]
 
+const SIGN_EDIT_PALETTE = [
+  { kind: 'signature', label: 'My Signature', icon: 'fa-signature' },
+  { kind: 'initials', label: 'My Initials', icon: 'fa-font' },
+  { kind: 'text', label: 'Text', icon: 'fa-i-cursor' },
+  { kind: 'date', label: 'Date Signed', icon: 'fa-calendar-alt' },
+  { kind: 'checkmark', label: 'Checkmark', icon: 'fa-check-circle' },
+]
+
+const ADD_FIELDS_PALETTE = [
+  { kind: 'sig-field', label: 'Signature Field', icon: 'fa-signature' },
+  { kind: 'initials-field', label: 'Initials Field', icon: 'fa-font' },
+  { kind: 'text-field', label: 'Text Field', icon: 'fa-align-left' },
+  { kind: 'date-signed-field', label: 'Date Signed Field', icon: 'fa-calendar-day' },
+  { kind: 'checkbox-field', label: 'Checkbox Field', icon: 'fa-check-square' },
+  { kind: 'radio-field', label: 'Radio Buttons', icon: 'fa-dot-circle' },
+  { kind: 'dropdown-field', label: 'Dropdown Field', icon: 'fa-caret-square-down' },
+  { kind: 'attachment-field', label: 'Attachment Field', icon: 'fa-paperclip' },
+  { kind: 'name-field', label: 'Name Field', icon: 'fa-id-card' },
+  { kind: 'email-field', label: 'Email Field', icon: 'fa-envelope' },
+  { kind: 'company-field', label: 'Company Field', icon: 'fa-building' },
+  { kind: 'title-field', label: 'Title Field', icon: 'fa-briefcase' },
+  { kind: 'phone-field', label: 'Phone Field', icon: 'fa-phone' },
+  { kind: 'address-field', label: 'Address Field', icon: 'fa-map-marker-alt' },
+]
+
+const FIELD_COLORS: Record<string, string> = {
+  'sig-field': '#3b82f6',
+  'initials-field': '#8b5cf6',
+  'text-field': '#10b981',
+  'date-signed-field': '#f59e0b',
+  'checkbox-field': '#06b6d4',
+  'radio-field': '#ec4899',
+  'dropdown-field': '#f97316',
+  'attachment-field': '#84cc16',
+  'name-field': '#6366f1',
+  'email-field': '#14b8a6',
+  'company-field': '#a855f7',
+  'title-field': '#f43f5e',
+  'phone-field': '#64748b',
+  'address-field': '#64748b',
+}
+
 export default function DashboardPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>('workspace')
@@ -48,11 +93,25 @@ export default function DashboardPage() {
   const [showNewDocForm, setShowNewDocForm] = useState(false)
   const [newTitle, setNewTitle] = useState('')
   const [creating, setCreating] = useState(false)
+  const [docFilter, setDocFilter] = useState<DocFilter>('documents')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [cloudMenuOpen, setCloudMenuOpen] = useState(false)
+  const [showSampleReferrals, setShowSampleReferrals] = useState(false)
+  const [openDocMenu, setOpenDocMenu] = useState<string | null>(null)
 
   // Affiliate state
   const [affiliateStats, setAffiliateStats] = useState({ totalReferrals: 0, activeAccounts: 0, expectedPayout: 0, paidOut: 0, tier: 'bronze' })
   const [tier, setTier] = useState('bronze')
   const [stripeConnected, setStripeConnected] = useState(false)
+  const [showAIAgreement, setShowAIAgreement] = useState(false)
+  const [showAITemplate, setShowAITemplate] = useState(false)
+  const [aiAgreementText, setAiAgreementText] = useState('')
+  const [aiAgreementResult, setAiAgreementResult] = useState('')
+  const [aiTemplatePrompt, setAiTemplatePrompt] = useState('')
+  const [aiTemplateResult, setAiTemplateResult] = useState('')
+  const [aiAgreementRunning, setAiAgreementRunning] = useState(false)
+  const [aiTemplateRunning, setAiTemplateRunning] = useState(false)
+  const [fieldPaletteCollapsed, setFieldPaletteCollapsed] = useState(false)
 
   useEffect(() => {
     fetch('/api/auth/session')
@@ -80,6 +139,16 @@ export default function DashboardPage() {
       .catch(() => { router.push('/login') })
   }, [router])
 
+  // Close menu on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      const target = e.target as HTMLElement
+      if (!target.closest('.doc-menu-btn')) setOpenDocMenu(null)
+    }
+    document.addEventListener('click', handleClick)
+    return () => document.removeEventListener('click', handleClick)
+  }, [])
+
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault()
     if (!newTitle.trim()) return
@@ -103,10 +172,75 @@ export default function DashboardPage() {
     setDocuments((prev) => prev.filter((d) => d.id !== id))
   }
 
+  async function handleSend(id: string) {
+    const res = await fetch(`/api/documents/${id}/send`, { method: 'POST' })
+    if (res.ok) {
+      setDocuments((prev) => prev.map((d) => d.id === id ? { ...d, status: 'sent' } : d))
+    }
+  }
+
+  function getFilteredDocs() {
+    let docs = documents
+    const q = searchQuery.trim().toLowerCase()
+    if (q) docs = docs.filter((d) => d.title.toLowerCase().includes(q))
+    return docs
+  }
+
+  function filterLabel() {
+    if (docFilter === 'waiting_me') return 'View: Waiting for me — envelopes where your signature is requested.'
+    if (docFilter === 'waiting_others') return 'View: Waiting for others — you completed your part; outstanding signers.'
+    if (docFilter === 'signed') return 'View: Signed — completed agreements in the last 90 days.'
+    return ''
+  }
+
   function copyReferralLink() {
     const link = `${window.location.origin}/?ref=${session?.affiliateCode || ''}`
     navigator.clipboard.writeText(link)
     alert('Referral link copied! Share it to earn 20-30% recurring commissions.')
+  }
+
+  function analyzeAgreementHeuristic(text: string): { risks: string[]; flags: string[]; summary: string } {
+    const risks: string[] = []
+    const flags: string[] = []
+    const lower = text.toLowerCase()
+    if (/indemnif|hold harm|liable|lawsuit/i.test(lower)) { risks.push('Indemnification clause may expose you to liability.'); flags.push('indemnification') }
+    if (/unlimited|perpetual|no limit|no cap/i.test(lower)) { risks.push('Unlimited liability or obligations detected.'); flags.push('unlimited') }
+    if (/auto.renew|automatically renew|self.renew/i.test(lower)) { risks.push('Auto-renewal clause found — ensure cancellation is easy.'); flags.push('auto-renewal') }
+    if (/assign|transfer.*right|sublicense/i.test(lower)) { risks.push('IP or rights transfer clause found.'); flags.push('IP transfer') }
+    if (/non.compete|noncompete|restrict.*competition/i.test(lower)) { risks.push('Non-compete clause may limit future work.'); flags.push('non-compete') }
+    if (/terminat.*convenien|terminat.*without cause/i.test(lower)) { risks.push('Termination for convenience — can be ended easily.'); flags.push('termination') }
+    if (/confidential|secrecy|nda/i.test(lower)) { risks.push('Confidentiality clause — obligations are mutual or one-sided.'); flags.push('confidentiality') }
+    if (/arbitrat|binding.*dispute|mediat/i.test(lower)) { risks.push('Mandatory arbitration — waives right to jury trial.'); flags.push('arbitration') }
+    const summary = risks.length === 0 ? 'Low risk — no major red flags detected.' : `Found ${risks.length} potential issue${risks.length > 1 ? 's' : ''}.`
+    return { risks, flags, summary }
+  }
+
+  function runAiAgreement() {
+    if (!aiAgreementText.trim()) return
+    setAiAgreementRunning(true)
+    setTimeout(() => {
+      const result = analyzeAgreementHeuristic(aiAgreementText)
+      let html = `<p><strong>${result.summary}</strong></p>`
+      if (result.risks.length > 0) {
+        html += '<ul>'
+        result.risks.forEach(r => { html += `<li>${r}</li>` })
+        html += '</ul>'
+        html += '<p>Flags: ' + result.flags.map(f => `<span class="ai-chip ai-chip-warn">${f}</span>`).join(' ') + '</p>'
+      } else {
+        html += '<span class="ai-chip ai-chip-ok">Looks clean</span>'
+      }
+      setAiAgreementResult(html)
+      setAiAgreementRunning(false)
+    }, 800)
+  }
+
+  function runAiTemplate() {
+    if (!aiTemplatePrompt.trim()) return
+    setAiTemplateRunning(true)
+    setTimeout(() => {
+      setAiTemplateResult(`<p><strong>AI-generated template draft</strong></p><p>Based on your request, this template includes standard sections. Review and customize as needed.</p>`)
+      setAiTemplateRunning(false)
+    }, 800)
   }
 
   const statusBadgeClass = (status: string) => {
@@ -183,9 +317,28 @@ export default function DashboardPage() {
             <div className="flex flex-col h-full">
               {/* Upload actions */}
               <div className="px-3 pt-4 pb-2">
-                <button className="upload-btn w-full mb-2">Upload Document</button>
+                <button
+                  onClick={() => setShowNewDocForm(true)}
+                  className="upload-btn w-full mb-2"
+                  style={{ backgroundColor: '#ff4e00', color: 'white', border: 'none', padding: '12px', borderRadius: '6px', fontWeight: 700, fontSize: '14px', cursor: 'pointer', marginBottom: '8px', transition: 'background 0.15s ease' }}
+                >
+                  Upload Document
+                </button>
                 <div className="relative">
-                  <button className="cloud-dropdown w-full">Get from Cloud</button>
+                  <button
+                    onClick={() => setCloudMenuOpen(!cloudMenuOpen)}
+                    className="cloud-dropdown w-full"
+                    style={{ width: '100%', border: '1px solid #d1d5db', padding: '10px 8px', borderRadius: '6px', textAlign: 'center', fontSize: '13px', color: '#64748b', marginBottom: cloudMenuOpen ? '0' : '22px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: '#fafafa' }}
+                  >
+                    Get from Cloud <span aria-hidden="true" style={{ width: 0, height: 0, borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderTop: '6px solid #64748b' }} />
+                  </button>
+                  {cloudMenuOpen && (
+                    <div className="cloud-menu" style={{ marginTop: '-6px', marginBottom: '18px', border: '1px solid #e5e7eb', borderRadius: '6px', overflow: 'hidden', fontSize: '12px', background: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }}>
+                      <button style={{ display: 'block', width: '100%', padding: '8px 12px', textAlign: 'left', border: 'none', background: '#fff', cursor: 'pointer', color: '#475569' }}>Google Drive</button>
+                      <button style={{ display: 'block', width: '100%', padding: '8px 12px', textAlign: 'left', border: 'none', background: '#fff', cursor: 'pointer', color: '#475569' }}>Dropbox</button>
+                      <button style={{ display: 'block', width: '100%', padding: '8px 12px', textAlign: 'left', border: 'none', background: '#fff', cursor: 'pointer', color: '#475569' }}>Box</button>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -199,6 +352,19 @@ export default function DashboardPage() {
                   >
                     + New
                   </button>
+                </div>
+
+                {/* Sub-filters */}
+                <div className="mb-2">
+                  {(['documents', 'waiting_me', 'waiting_others', 'signed'] as DocFilter[]).map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => setDocFilter(f)}
+                      className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${docFilter === f ? 'text-blue-600 font-semibold bg-blue-50' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                      {f === 'documents' ? 'Documents' : f === 'waiting_me' ? 'Waiting for me' : f === 'waiting_others' ? 'Waiting for others' : 'Signed'}
+                    </button>
+                  ))}
                 </div>
 
                 {/* New document form */}
@@ -229,7 +395,7 @@ export default function DashboardPage() {
                   </div>
                 ) : (
                   <ul className="space-y-1">
-                    {documents.map((doc) => (
+                    {getFilteredDocs().map((doc) => (
                       <li key={doc.id}>
                         <Link
                           href={`/dashboard/documents/${doc.id}`}
@@ -298,26 +464,34 @@ export default function DashboardPage() {
         <div className="flex-1 min-w-0 w-full">
           {activeTab === 'workspace' ? (
             <div className="max-w-6xl mx-auto px-4 py-6">
+              {/* Filter banner */}
+              {filterLabel() && (
+                <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">{filterLabel()}</div>
+              )}
               <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                  <h3 className="font-bold text-lg text-gray-900">Documents</h3>
-                  <button
-                    onClick={() => setShowNewDocForm(true)}
-                    className="text-sm bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full font-medium hover:bg-blue-100"
-                  >
-                    <i className="fas fa-plus mr-1"></i> New Document
-                  </button>
+                  <h3 className="font-bold text-lg text-gray-900"><i className="fas fa-folder-open text-blue-600 mr-2"></i>Documents</h3>
+                  <div className="relative w-full sm:max-w-xs sm:ml-auto">
+                    <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" style={{ top: '50%', transform: 'translateY(-50%)' }}></i>
+                    <input
+                      type="search"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search documents..."
+                      className="w-full border border-gray-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none"
+                    />
+                  </div>
                 </div>
 
                 {documents.length === 0 ? (
                   <div className="text-center py-16 text-gray-400">
                     <p className="text-4xl mb-3">📄</p>
                     <p className="text-lg font-medium">No documents yet</p>
-                    <p className="text-sm mt-1">Click &ldquo;New Document&rdquo; above to get started.</p>
+                    <p className="text-sm mt-1">Click "New Document" above to get started.</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {documents.map((doc) => (
+                    {getFilteredDocs().map((doc) => (
                       <div key={doc.id} className="dash-doc-row bg-white rounded-xl border border-gray-100">
                         <div className="flex items-center gap-4 flex-1 min-w-0">
                           <div className="text-xl text-gray-400" aria-hidden="true"><i className="fas fa-file-alt"></i></div>
@@ -332,8 +506,63 @@ export default function DashboardPage() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0 ml-4">
+                          {doc.status === 'draft' && (
+                            <button
+                              onClick={() => handleSend(doc.id)}
+                              className="flex items-center gap-1.5 text-sm px-3 py-1.5 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 text-gray-700"
+                            >
+                              <i className="fas fa-paper-plane text-xs text-blue-600"></i> Send for signing
+                            </button>
+                          )}
+                          {doc.signers && doc.signers.some(
+                            (s) => s.email === session?.email && !s.signed_at
+                          ) && (doc.status === 'draft' || doc.status === 'sent') && (
+                            <Link
+                              href={`/sign/${doc.id}`}
+                              className="flex items-center gap-1.5 text-sm px-3 py-1.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700"
+                            >
+                              <i className="fas fa-pen text-xs"></i> Sign
+                            </Link>
+                          )}
                           <Link href={`/dashboard/documents/${doc.id}`} className="text-sm bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg font-medium hover:bg-blue-100">Edit</Link>
-                          <button onClick={() => handleDelete(doc.id)} className="text-sm text-red-500 hover:text-red-700 font-medium">Delete</button>
+                          {/* More actions dropdown */}
+                          <div className="relative">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setOpenDocMenu(openDocMenu === doc.id ? null : doc.id) }}
+                              className="doc-menu-btn text-gray-500 hover:text-gray-700 px-2 py-1.5 rounded-lg hover:bg-gray-100"
+                              aria-label="More actions"
+                            >
+                              <i className="fas fa-ellipsis-h"></i>
+                            </button>
+                            {openDocMenu === doc.id && (
+                              <div className="absolute right-0 mt-1 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                                <button
+                                  onClick={() => { router.push(`/dashboard/documents/${doc.id}`); setOpenDocMenu(null) }}
+                                  className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                >
+                                  <i className="fas fa-eye w-4"></i> View
+                                </button>
+                                <button
+                                  onClick={() => { router.push(`/dashboard/documents/${doc.id}`); setOpenDocMenu(null) }}
+                                  className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                >
+                                  <i className="fas fa-edit w-4"></i> Edit
+                                </button>
+                                <button
+                                  onClick={() => { setOpenDocMenu(null) }}
+                                  className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                >
+                                  <i className="fas fa-copy w-4"></i> Duplicate
+                                </button>
+                                <button
+                                  onClick={() => { handleDelete(doc.id); setOpenDocMenu(null) }}
+                                  className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                                >
+                                  <i className="fas fa-trash w-4"></i> Delete
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -344,10 +573,50 @@ export default function DashboardPage() {
               {/* Document actions — placeholder area */}
               <div className="mt-6 bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
                 <h3 className="font-bold mb-3 text-gray-900"><i className="fas fa-file-signature text-blue-600 mr-2"></i>Prepare &amp; send</h3>
+                {/* AI buttons */}
                 <div className="flex gap-2 mb-4 flex-wrap items-center">
-                  <button className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm"><i className="fas fa-plus"></i> Add Signature Field</button>
-                  <button className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">Clear Fields</button>
-                  <button className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-medium hover:bg-blue-700">Finalize Document</button>
+                  <button
+                    onClick={() => setShowAIAgreement(true)}
+                    className="bg-violet-100 text-violet-800 border border-violet-200 px-4 py-2 rounded-full text-sm font-medium hover:bg-violet-200"
+                  >
+                    <i className="fas fa-magic mr-1" aria-hidden="true"></i> AI agreement review
+                  </button>
+                  <button
+                    onClick={() => setShowAITemplate(true)}
+                    className="bg-teal-100 text-teal-800 border border-teal-200 px-4 py-2 rounded-full text-sm font-medium hover:bg-teal-200"
+                  >
+                    <i className="fas fa-sparkles mr-1" aria-hidden="true"></i> AI generate template
+                  </button>
+                </div>
+                {/* Field palette (collapsible) */}
+                <div className="mb-4">
+                  <button
+                    onClick={() => setFieldPaletteCollapsed(!fieldPaletteCollapsed)}
+                    className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 hover:text-gray-900"
+                  >
+                    <span className={`transition-transform ${fieldPaletteCollapsed ? '' : 'rotate-90'}`}><i className="fas fa-chevron-right text-xs"></i></span>
+                    Field Palette
+                  </button>
+                  {!fieldPaletteCollapsed && (
+                    <div>
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Sign &amp; Edit</p>
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {SIGN_EDIT_PALETTE.map(f => (
+                          <button key={f.kind} className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full border border-gray-200 flex items-center gap-1.5">
+                            <i className={`fas ${f.icon} text-xs`}></i>{f.label}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Add Fields</p>
+                      <div className="flex flex-wrap gap-2">
+                        {ADD_FIELDS_PALETTE.map(f => (
+                          <button key={f.kind} className="text-xs bg-gray-50 hover:bg-gray-100 text-gray-600 px-3 py-1.5 rounded-full border border-gray-200 flex items-center gap-1.5">
+                            <i className={`fas ${f.icon} text-xs`}></i>{f.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="p-8 bg-gray-50 rounded-xl border text-center text-gray-400 text-sm" style={{ backgroundImage: 'radial-gradient(#e5e7eb 0.5px, transparent 0.5px)', backgroundSize: '16px 16px' }}>
                   <p>Select a document and click <strong>Edit</strong> to open the document editor.</p>
@@ -362,6 +631,12 @@ export default function DashboardPage() {
                 <div className="flex gap-2">
                   <button onClick={copyReferralLink} className="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-medium hover:bg-green-200">
                     <i className="fas fa-link mr-1"></i> Copy Referral Link
+                  </button>
+                  <button
+                    onClick={() => setShowSampleReferrals(!showSampleReferrals)}
+                    className="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm font-medium hover:bg-gray-200"
+                  >
+                    <i className="fas fa-chart-line mr-1"></i> Load Sample
                   </button>
                 </div>
               </div>
@@ -461,8 +736,11 @@ export default function DashboardPage() {
               {/* Recent referral activity */}
               <div className="mt-8 bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
                 <h3 className="font-bold text-gray-900 mb-2">Recent referral activity</h3>
+                {!showSampleReferrals && (
+                  <p className="text-xs text-gray-500 mb-3">Use <strong>Load sample</strong> above to populate this list.</p>
+                )}
                 <div className="space-y-2">
-                  {recentReferrals.map((r, i) => (
+                  {(showSampleReferrals ? recentReferrals : []).map((r, i) => (
                     <div key={i} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg text-sm">
                       <div>
                         <span className="font-medium">{r.email}</span>
@@ -484,6 +762,75 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* AI Agreement Review Modal */}
+      {showAIAgreement && (
+        <div className="fixed inset-0 bg-black/55 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={(e) => { if (e.target === e.currentTarget) setShowAIAgreement(false) }}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2"><i className="fas fa-magic"></i> AI agreement assistant</h3>
+              <button onClick={() => setShowAIAgreement(false)} className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100">
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <label className="block text-sm font-semibold text-slate-800 mb-1">Agreement or clause text</label>
+            <textarea
+              value={aiAgreementText}
+              onChange={(e) => setAiAgreementText(e.target.value)}
+              className="w-full border border-slate-200 rounded-xl p-3 text-sm min-h-[140px] focus:ring-2 focus:ring-violet-200 focus:border-violet-400 outline-none"
+              placeholder="Paste NDA, MSA, offer letter, or policy language here..."
+            />
+            <div className="flex items-center gap-3 mt-3 mb-3">
+              <button
+                onClick={runAiAgreement}
+                disabled={aiAgreementRunning}
+                className="bg-violet-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-violet-700 disabled:opacity-50"
+              >
+                <i className="fas fa-robot mr-2" aria-hidden="true"></i>{aiAgreementRunning ? 'Analyzing...' : 'Analyze with AI'}
+              </button>
+              {aiAgreementRunning && <span className="text-xs text-slate-500">Running built-in analysis...</span>}
+            </div>
+            <div
+              className="rounded-xl border border-slate-100 bg-slate-50/80 p-4 min-h-[120px] text-left text-sm"
+              dangerouslySetInnerHTML={{ __html: aiAgreementResult || '<p class="text-gray-400">Results will appear here.</p>' }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* AI Generate Template Modal */}
+      {showAITemplate && (
+        <div className="fixed inset-0 bg-black/55 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={(e) => { if (e.target === e.currentTarget) setShowAITemplate(false) }}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2"><i className="fas fa-sparkles"></i> AI document generator</h3>
+              <button onClick={() => setShowAITemplate(false)} className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100">
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <label className="block text-sm font-semibold text-slate-800 mb-1">Template prompt</label>
+            <textarea
+              value={aiTemplatePrompt}
+              onChange={(e) => setAiTemplatePrompt(e.target.value)}
+              className="w-full border border-slate-200 rounded-xl p-3 text-sm min-h-[120px] focus:ring-2 focus:ring-cyan-200 focus:border-cyan-400 outline-none"
+              placeholder="Example: Generate a 2-party SaaS agreement template with NDA clause, payment terms, and signature blocks."
+            />
+            <div className="flex items-center gap-3 mt-3 mb-3">
+              <button
+                onClick={runAiTemplate}
+                disabled={aiTemplateRunning}
+                className="bg-teal-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-teal-700 disabled:opacity-50"
+              >
+                <i className="fas fa-sparkles mr-2" aria-hidden="true"></i>{aiTemplateRunning ? 'Generating...' : 'Generate draft'}
+              </button>
+            </div>
+            <div
+              className="rounded-xl border border-slate-100 bg-slate-50/80 p-4 min-h-[100px] text-sm"
+              dangerouslySetInnerHTML={{ __html: aiTemplateResult || '<p class="text-gray-400">Generated draft will appear here.</p>' }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
