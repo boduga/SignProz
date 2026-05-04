@@ -515,6 +515,12 @@ export default function DocumentEditorPage() {
     return 'bg-gray-100 text-gray-600'
   }
 
+  const signerStatus = (signer: { signed_at: string | null; viewed_at: string | null }) => {
+    if (signer.signed_at) return 'signed'
+    if (signer.viewed_at) return 'viewed'
+    return 'pending'
+  }
+
   const fieldTypeIcon = (type: string) => {
     const icons: Record<string, string> = {
       signature: 'fa-signature',
@@ -768,8 +774,8 @@ export default function DocumentEditorPage() {
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-800 truncate">{signer.name}</p>
                           <p className="text-xs text-gray-400 truncate">{signer.email}</p>
-                          <span className={`text-xs px-1.5 py-0.5 rounded-full mt-0.5 inline-block ${signerStatusClass(signer.status)}`}>
-                            {signer.status}
+                          <span className={`text-xs px-1.5 py-0.5 rounded-full mt-0.5 inline-block ${signerStatusClass(signerStatus(signer))}`}>
+                            {signerStatus(signer)}
                           </span>
                         </div>
                         {isDraft && (
@@ -997,8 +1003,8 @@ export default function DocumentEditorPage() {
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-800 truncate">{signer.name}</p>
                           <p className="text-xs text-gray-400 truncate">{signer.email}</p>
-                          <span className={`text-xs px-1.5 py-0.5 rounded-full mt-0.5 inline-block ${signerStatusClass(signer.status)}`}>
-                            {signer.status}
+                          <span className={`text-xs px-1.5 py-0.5 rounded-full mt-0.5 inline-block ${signerStatusClass(signerStatus(signer))}`}>
+                            {signerStatus(signer)}
                           </span>
                         </div>
                         {isDraft && (
