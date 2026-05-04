@@ -103,7 +103,8 @@ CREATE TABLE public.signers (
   signed_at TIMESTAMPTZ,
   signed_data JSONB,
   "order" INT DEFAULT 0,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 GRANT SELECT ON TABLE public.signers TO authenticated;
@@ -179,7 +180,8 @@ CREATE TABLE public.signature_fields (
   height FLOAT NOT NULL DEFAULT 5,
   is_required BOOLEAN NOT NULL DEFAULT true,
   filled_value JSONB,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 GRANT SELECT, INSERT ON TABLE public.signature_fields TO authenticated;
@@ -212,7 +214,8 @@ CREATE TABLE public.audit_logs (
   action TEXT NOT NULL,
   metadata JSONB,
   ip_address TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 GRANT SELECT ON TABLE public.audit_logs TO authenticated;
@@ -260,7 +263,8 @@ CREATE TABLE public.affiliate_referrals (
   status TEXT NOT NULL DEFAULT 'registered' CHECK (status IN ('registered', 'upgraded', 'churned')),
   commission_paid NUMERIC(10, 2) DEFAULT 0,
   commission_currency TEXT NOT NULL DEFAULT 'USD',
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 GRANT SELECT ON TABLE public.affiliate_referrals TO authenticated;
