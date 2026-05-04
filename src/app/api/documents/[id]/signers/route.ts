@@ -68,7 +68,7 @@ export async function POST(request: Request, { params }: RouteParams) {
 
   const { data, error } = await supabaseAdmin
     .from('signers')
-    .insert({ document_id: id, name, email, order: order ?? 0, status: 'pending' })
+    .insert({ document_id: id, name, email, order: order ?? 0 })
     .select()
     .single()
 
