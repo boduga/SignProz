@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.92.0",
+    "@fortawesome/free-solid-svg-icons": "^7.2.0",
+    "@fortawesome/react-fontawesome": "^3.3.1",
     "@react-email/components": "^1.0.12",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.105.1",

@@ -78,7 +78,7 @@ function SignPageContent() {
 
     async function fetchData() {
       try {
-        const res = await fetch(`/api/sign/${documentId}?token=${encodeURIComponent(token)}`)
+        const res = await fetch(`/api/sign/${documentId}?token=${encodeURIComponent(token!)}`)
         const data = await res.json()
 
         if (!res.ok) {

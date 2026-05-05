@@ -515,9 +515,9 @@ export default function DocumentEditorPage() {
     return 'bg-gray-100 text-gray-600'
   }
 
-  const signerStatus = (signer: { signed_at: string | null; viewed_at: string | null }) => {
+  const signerStatus = (signer: { signed_at: string | null; status?: string }) => {
     if (signer.signed_at) return 'signed'
-    if (signer.viewed_at) return 'viewed'
+    if (signer.status === 'viewed') return 'viewed'
     return 'pending'
   }
 
