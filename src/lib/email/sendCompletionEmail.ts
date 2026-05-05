@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer'
 import { CompletionEmail } from './templates/CompletionEmail'
-import { render } from '@react-email/components'
+import { render } from '@react-email/render'
 
 let transporter: nodemailer.Transporter | null = null
 
