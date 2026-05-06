@@ -140,8 +140,14 @@
 }
 
 /* Signature field in preview */
-.signature-field { position: absolute; border: 2px dashed currentColor; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.signature-field { position: absolute; border: 2px dashed currentColor; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; cursor: pointer; padding: 4px; overflow: hidden; user-select: none; }
 .signature-field.selected { box-shadow: 0 0 0 3px #3b82f6; }
+.signature-field .absolute { top: -8px; }
+.signature-field .cursor-se-resize { position: absolute; bottom: 0; right: 0; width: 14px; height: 14px; cursor: se-resize; display: flex; align-items: center; justify-content: center; color: #9ca3af; }
+
+/* Drop target states */
+.document-drop-target { outline: 2px dashed #93c5fd !important; outline-offset: 0px !important; background: rgba(147, 197, 253, 0.05) !important; }
+.pdf-drop-active { outline: 2px dashed #f59e0b !important; background: rgba(245, 158, 11, 0.05) !important; }
 
 /* Document editor layout */
 .editor-grid { display: grid; grid-template-columns: 260px 1fr 240px; height: calc(100vh - 64px); overflow: hidden; }

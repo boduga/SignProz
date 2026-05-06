@@ -1,10 +1,12 @@
 import nodemailer from 'nodemailer'
+import { Resend } from 'resend'
 import { MagicLinkEmail } from './templates/MagicLinkEmail'
-import { render } from '@react-email/render'
+import { render } from '@react-email/components'
 
 let transporter: nodemailer.Transporter | null = null
+let resendClient: Resend | null = null
 
-function getTransporter() {
+function getNodemailerTransporter() {
   if (!transporter) {
     transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || '127.0.0.1',
@@ -14,6 +16,17 @@ function getTransporter() {
     })
   }
   return transporter
+}
+
+function getResendClient() {
+  if (!resendClient) {
+    resendClient = new Resend(process.env.RESEND_API_KEY)
+  }
+  return resendClient
+}
+
+function isProduction() {
+  return process.env.NODE_ENV === 'production' && !!process.env.RESEND_API_KEY
 }
 
 interface Signer {
@@ -47,10 +60,20 @@ export async function sendMagicLinkEmail(
     { pretty: true }
   )
 
-  await getTransporter().sendMail({
-    from: 'SignProz <noreply@signproz.com>',
-    to: signer.email,
-    subject: `You've been asked to sign: ${document.title}`,
-    html,
-  })
+  if (isProduction()) {
+    const resend = getResendClient()
+    await resend.emails.send({
+      from: 'SignProz <noreply@signproz.com>',
+      to: signer.email,
+      subject: `You've been asked to sign: ${document.title}`,
+      html,
+    })
+  } else {
+    await getNodemailerTransporter().sendMail({
+      from: 'SignProz <noreply@signproz.com>',
+      to: signer.email,
+      subject: `You've been asked to sign: ${document.title}`,
+      html,
+    })
+  }
 }
