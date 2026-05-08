@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { getBrowserClient } from '@/lib/supabase/browser'
 
 export default function SignupPage() {
   const [email, setEmail] = useState('')
@@ -17,17 +16,16 @@ export default function SignupPage() {
     setLoading(true)
 
     try {
-      const supabase = getBrowserClient()
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
-          data: { referral_code: referralCode || null },
-        },
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, referralCode }),
       })
 
-      if (error) {
-        setError(error.message)
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error || 'Something went wrong')
         setLoading(false)
         return
       }
