@@ -8,7 +8,6 @@ export async function GET(request: NextRequest) {
   const token = url.searchParams.get('token')
 
   if (token) {
-    // Custom magic link flow (via Resend)
     const supabase = await createServerClient()
     const supabaseAdmin = createAdminClient()
 
@@ -33,16 +32,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/login?error=token_used', request.url))
     }
 
-    // Mark token as used
-    await supabase
-      .from('auth_tokens')
-      .update({ used_at: new Date().toISOString() })
-      .eq('token', token)
-
-    // Create or get user
+    // Find or create user
     let userId = tokenData.user_id
 
-    // Try to find existing user first
+    // Check if user already exists
     if (!userId) {
       const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers()
       const existingUser = existingUsers?.users.find(u => u.email === tokenData.email)
@@ -60,17 +53,13 @@ export async function GET(request: NextRequest) {
       })
 
       if (signUpError) {
-        console.error('User creation error:', signUpError)
-        // If user already exists (from previous attempt), try to get their ID
-        if (signUpError.message.includes('already')) {
-          const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers()
-          const existingUser = existingUsers?.users.find(u => u.email === tokenData.email)
-          if (existingUser) {
-            userId = existingUser.id
-          }
-        }
-
-        if (!userId) {
+        // User might already exist
+        const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers()
+        const existingUser = existingUsers?.users.find(u => u.email === tokenData.email)
+        if (existingUser) {
+          userId = existingUser.id
+        } else {
+          console.error('User creation error:', signUpError)
           return NextResponse.redirect(new URL('/login?error=creation_failed', request.url))
         }
       } else {
@@ -78,12 +67,33 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Update token with user_id
+    // Update token with user_id and mark as used
     if (userId) {
       await supabase
         .from('auth_tokens')
-        .update({ user_id: userId })
+        .update({ user_id: userId, used_at: new Date().toISOString() })
         .eq('token', token)
+    }
+
+    // Generate a magic link to create session
+    if (userId && tokenData.email) {
+      const { data: linkData } = await supabaseAdmin.auth.admin.generateLink({
+        type: 'magiclink',
+        email: tokenData.email,
+      })
+
+      if (linkData?.properties?.hashed_token) {
+        // Set the session cookies
+        const response = NextResponse.redirect(new URL('/dashboard', request.url))
+        response.cookies.set('sb-access-token', linkData.properties.hashed_token, {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'lax',
+          maxAge: 3600,
+          path: '/',
+        })
+        return response
+      }
     }
 
     return NextResponse.redirect(new URL('/dashboard', request.url))
@@ -92,10 +102,12 @@ export async function GET(request: NextRequest) {
   if (code) {
     // Supabase native magic link flow
     const supabase = await createServerClient()
-    await supabase.auth.exchangeCodeForSession(code)
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    if (error) {
+      console.error('Code exchange error:', error)
+    }
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
-  // No code or token, redirect to login
   return NextResponse.redirect(new URL('/login', request.url))
 }
