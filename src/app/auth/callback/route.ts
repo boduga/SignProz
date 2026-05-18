@@ -120,6 +120,11 @@ export async function GET(request: NextRequest) {
   const authTokenKey = `sb-${projectRef}-auth-token`
   const authTokenKeyV2 = `sb-${projectRef}-auth-token.v2`
 
+  console.log('[callback] projectRef:', projectRef)
+  console.log('[callback] Setting cookie:', authTokenKey)
+  console.log('[callback] accessToken:', accessToken.substring(0, 50) + '...')
+  console.log('[callback] refreshToken:', fullRefreshToken.substring(0, 50) + '...')
+
   // Set Supabase auth cookies directly with correct names
   response.cookies.set(authTokenKey, accessToken, {
     httpOnly: true,
