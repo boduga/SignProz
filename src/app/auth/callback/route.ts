@@ -52,7 +52,6 @@ export async function GET(request: NextRequest) {
       userId = authData.user?.id
     }
 
-    // Update token with user_id
     if (userId) {
       await supabase
         .from('auth_tokens')
@@ -67,11 +66,26 @@ export async function GET(request: NextRequest) {
     .update({ used_at: new Date().toISOString() })
     .eq('token', token)
 
-  // Create response that redirects to dashboard
-  // The client-side code will handle setting up the session
-  const response = NextResponse.redirect(
-    new URL(`/auth/callback-client?email=${encodeURIComponent(tokenData.email)}&user_id=${userId}`, request.url)
-  )
+  // Create response with redirect
+  const response = NextResponse.redirect(new URL('/dashboard', request.url))
+
+  // Set auth email cookie for dashboard to read
+  response.cookies.set('auth_email', tokenData.email, {
+    httpOnly: false,
+    secure: true,
+    sameSite: 'lax',
+    maxAge: 60,
+    path: '/',
+  })
+
+  // Set a flag indicating successful auth
+  response.cookies.set('auth_complete', 'true', {
+    httpOnly: false,
+    secure: true,
+    sameSite: 'lax',
+    maxAge: 60,
+    path: '/',
+  })
 
   return response
 }
