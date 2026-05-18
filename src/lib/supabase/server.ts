@@ -12,7 +12,13 @@ export async function createServerClient(forAdmin = false) {
     {
       cookies: {
         getAll() {
-          return cookieStore.getAll()
+          const allCookies = cookieStore.getAll()
+          // Also read our custom auth cookies set by callback route
+          const requestHeaders = new Headers()
+          allCookies.forEach(c => {
+            requestHeaders.append('cookie', `${c.name}=${c.value}`)
+          })
+          return allCookies
         },
         setAll(cookiesToSet) {
           try {
