@@ -8,36 +8,29 @@ function CallbackContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [error, setError] = useState('')
-  const token = searchParams.get('token')
+  const email = searchParams.get('email')
+  const userId = searchParams.get('user_id')
 
   useEffect(() => {
-    if (!token) {
+    if (!email) {
       router.push('/login')
       return
     }
 
     const handleCallback = async () => {
       try {
-        // Get email from token
-        const res = await fetch(`/api/auth/callback-data?token=${token}`)
-        const data = await res.json()
-
-        if (data.error || !data.email) {
-          setError('Invalid or expired link')
-          setTimeout(() => router.push('/login?error=invalid_token'), 2000)
-          return
-        }
-
-        // Use signInWithOtp to create session (this sets cookies automatically)
         const supabase = getBrowserClient()
+
+        // Use signInWithOtp to create session for the email
+        // This works even for existing users
         const { error: signInError } = await supabase.auth.signInWithOtp({
-          email: data.email,
+          email: email,
         })
 
         if (signInError) {
           console.error('Sign in error:', signInError)
           setError('Failed to sign in')
-          setTimeout(() => router.push('/login'), 2000)
+          setTimeout(() => router.push('/login?error=signin_failed'), 2000)
           return
         }
 
@@ -51,7 +44,7 @@ function CallbackContent() {
     }
 
     handleCallback()
-  }, [token, router])
+  }, [email, router])
 
   return (
     <div className="text-center">
