@@ -7,17 +7,22 @@ export async function GET() {
   const allCookies = cookieStore.getAll()
   const authCookies = allCookies.filter(c => c.name.includes('sb-') || c.name.includes('auth'))
 
-  console.log('[session debug] All cookies:', allCookies.map(c => c.name))
-  console.log('[session debug] Auth cookies:', authCookies.map(c => c.name))
+  // Check all cookies and look for Supabase session data
+  const accessCookie = allCookies.find(c => c.name.includes('auth-token') && !c.name.includes('.v2'))
+  const refreshCookie = allCookies.find(c => c.name.includes('auth-token.v2'))
 
   const supabase = await createServerClient()
   const { data: { session }, error } = await supabase.auth.getSession()
 
-  console.log('[session debug] getSession result:', { session: session ? 'EXISTS' : 'NULL', error })
-
-  if (error || !session) {
-    return NextResponse.json({ session: null, user: null })
-  }
-
-  return NextResponse.json({ session, user: session.user })
+  return NextResponse.json({
+    session: session ? { user: session.user.email, expiresAt: session.expires_at } : null,
+    error: error ? error.message : null,
+    cookies: {
+      total: allCookies.length,
+      authNames: authCookies.map(c => c.name),
+      hasAccessCookie: !!accessCookie,
+      hasRefreshCookie: !!refreshCookie,
+      allCookieNames: allCookies.map(c => c.name),
+    }
+  })
 }

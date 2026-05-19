@@ -112,9 +112,10 @@ export async function GET(request: NextRequest) {
   const refreshSignature = await createHmacSignature(refreshTokenBase64, secret)
   const fullRefreshToken = `${refreshTokenBase64}.${refreshSignature}`
 
-  // Calculate cookie names
-  const hostParts = request.headers.get('host')?.split('.') || []
-  const projectRef = hostParts[0]?.replace(':', '') || 'localhost'
+  // Calculate cookie names - extract ref from Supabase URL, not host header
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  const urlMatch = supabaseUrl.match(/:\/\/([^.]+)/)
+  const projectRef = urlMatch ? urlMatch[1] : 'sign-proz-bay'
   const authTokenKey = `sb-${projectRef}-auth-token`
   const authTokenKeyV2 = `sb-${projectRef}-auth-token.v2`
 
@@ -125,6 +126,7 @@ export async function GET(request: NextRequest) {
 <body style="font-family: monospace; padding: 20px; background: #1a1a1a; color: #0f0; max-width: 800px; margin: 0 auto;">
   <h2 style="color: #fff;">Auth Callback Debug</h2>
   <pre id="debug" style="background: #222; padding: 15px; border-radius: 8px; overflow: auto;">
+supabaseUrl: ${supabaseUrl}
 projectRef: ${projectRef}
 authTokenKey: ${authTokenKey}
 authTokenKeyV2: ${authTokenKeyV2}
