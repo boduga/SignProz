@@ -112,45 +112,18 @@ export async function GET(request: NextRequest) {
   const refreshSignature = await createHmacSignature(refreshTokenBase64, secret)
   const fullRefreshToken = `${refreshTokenBase64}.${refreshSignature}`
 
-  // Calculate cookie names - extract ref from Supabase URL, not host header
+  // Calculate cookie names from Supabase URL
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
   const urlMatch = supabaseUrl.match(/:\/\/([^.]+)/)
   const projectRef = urlMatch ? urlMatch[1] : 'sign-proz-bay'
   const authTokenKey = `sb-${projectRef}-auth-token`
   const authTokenKeyV2 = `sb-${projectRef}-auth-token.v2`
 
-  // Create HTML debug page
-  const html = `<!DOCTYPE html>
-<html>
-<head><title>Auth Debug</title></head>
-<body style="font-family: monospace; padding: 20px; background: #1a1a1a; color: #0f0; max-width: 800px; margin: 0 auto;">
-  <h2 style="color: #fff;">Auth Callback Debug</h2>
-  <pre id="debug" style="background: #222; padding: 15px; border-radius: 8px; overflow: auto;">
-supabaseUrl: ${supabaseUrl}
-projectRef: ${projectRef}
-authTokenKey: ${authTokenKey}
-authTokenKeyV2: ${authTokenKeyV2}
-user: ${user.email}
-accessToken: ${accessToken.substring(0, 80)}...
-refreshToken: ${fullRefreshToken.substring(0, 80)}...
+  // Create HTTP redirect response with cookies set on the redirect itself
+  const redirectUrl = new URL('/dashboard', request.url)
+  const response = NextResponse.redirect(redirectUrl)
 
-Click the button below to manually go to dashboard (or wait 5 seconds)
-  </pre>
-  <button onclick="window.location.href='/dashboard'" style="padding: 10px 20px; font-size: 16px; cursor: pointer;">
-    Go to Dashboard Now
-  </button>
-  <script>
-    setTimeout(() => { window.location.href = '/dashboard'; }, 5000);
-  </script>
-</body>
-</html>`
-
-  // Create response with debug page
-  const response = new NextResponse(html, {
-    headers: { 'Content-Type': 'text/html' },
-  })
-
-  // Set Supabase auth cookies directly with correct names
+  // Set Supabase auth cookies on the redirect response
   response.cookies.set(authTokenKey, accessToken, {
     httpOnly: true,
     secure: true,
