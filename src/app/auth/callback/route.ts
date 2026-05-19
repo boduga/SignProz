@@ -112,18 +112,41 @@ export async function GET(request: NextRequest) {
   const refreshSignature = await createHmacSignature(refreshTokenBase64, secret)
   const fullRefreshToken = `${refreshTokenBase64}.${refreshSignature}`
 
-  // Create response with redirect to dashboard
-  const response = NextResponse.redirect(new URL('/dashboard', request.url))
-
+  // Calculate cookie names
   const hostParts = request.headers.get('host')?.split('.') || []
-  const projectRef = hostParts[0]?.replace(':', '')
+  const projectRef = hostParts[0]?.replace(':', '') || 'localhost'
   const authTokenKey = `sb-${projectRef}-auth-token`
   const authTokenKeyV2 = `sb-${projectRef}-auth-token.v2`
 
-  console.log('[callback] projectRef:', projectRef)
-  console.log('[callback] Setting cookie:', authTokenKey)
-  console.log('[callback] accessToken:', accessToken.substring(0, 50) + '...')
-  console.log('[callback] refreshToken:', fullRefreshToken.substring(0, 50) + '...')
+  // Create HTML debug page
+  const html = `<!DOCTYPE html>
+<html>
+<head><title>Auth Debug</title></head>
+<body style="font-family: monospace; padding: 20px; background: #1a1a1a; color: #0f0; max-width: 800px; margin: 0 auto;">
+  <h2 style="color: #fff;">Auth Callback Debug</h2>
+  <pre id="debug" style="background: #222; padding: 15px; border-radius: 8px; overflow: auto;">
+projectRef: ${projectRef}
+authTokenKey: ${authTokenKey}
+authTokenKeyV2: ${authTokenKeyV2}
+user: ${user.email}
+accessToken: ${accessToken.substring(0, 80)}...
+refreshToken: ${fullRefreshToken.substring(0, 80)}...
+
+Click the button below to manually go to dashboard (or wait 5 seconds)
+  </pre>
+  <button onclick="window.location.href='/dashboard'" style="padding: 10px 20px; font-size: 16px; cursor: pointer;">
+    Go to Dashboard Now
+  </button>
+  <script>
+    setTimeout(() => { window.location.href = '/dashboard'; }, 5000);
+  </script>
+</body>
+</html>`
+
+  // Create response with debug page
+  const response = new NextResponse(html, {
+    headers: { 'Content-Type': 'text/html' },
+  })
 
   // Set Supabase auth cookies directly with correct names
   response.cookies.set(authTokenKey, accessToken, {
