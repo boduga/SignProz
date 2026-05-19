@@ -119,23 +119,42 @@ export async function GET(request: NextRequest) {
   const authTokenKey = `sb-${projectRef}-auth-token`
   const authTokenKeyV2 = `sb-${projectRef}-auth-token.v2`
 
-  // Build dashboard URL with session data in query params
-  const dashboardUrl = new URL('/dashboard', request.url)
-  dashboardUrl.searchParams.set('access_token', accessToken)
-  dashboardUrl.searchParams.set('refresh_token', fullRefreshToken)
+  // Return HTML that sets cookies via JavaScript then redirects
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+  <title>Signing in...</title>
+</head>
+<body>
+<script>
+(function() {
+  var accessToken = "${accessToken}";
+  var refreshToken = "${fullRefreshToken}";
+  var authTokenKey = "${authTokenKey}";
+  var authTokenKeyV2 = "${authTokenKeyV2}";
 
-  // Use 307 redirect with Set-Cookie headers
-  const response = NextResponse.redirect(dashboardUrl, 307)
+  // Set cookies with proper options for cross-origin
+  document.cookie = authTokenKey + "=" + accessToken + "; path=/; max-age=3600; SameSite=Lax; Secure";
+  document.cookie = authTokenKeyV2 + "=" + refreshToken + "; path=/; max-age=604800; SameSite=Lax; Secure";
 
-  // Set cookies with explicit headers (bypass Next.js cookie handling)
-  response.headers.set('Set-Cookie',
-    `${authTokenKey}=${accessToken}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`
-  )
-  response.headers.append('Set-Cookie',
-    `${authTokenKeyV2}=${fullRefreshToken}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800`
-  )
+  console.log("Cookies set:", authTokenKey, authTokenKeyV2);
 
-  return response
+  // Redirect to dashboard
+  window.location.href = "/dashboard";
+})();
+</script>
+<noscript>
+  <p>JavaScript required. <a href="/dashboard">Click here to continue</a>.</p>
+</noscript>
+</body>
+</html>`
+
+  return new NextResponse(html, {
+    headers: {
+      'Content-Type': 'text/html',
+      'Cache-Control': 'no-store',
+    },
+  })
 }
 
 async function createHmacSignature(data: string, secret: string): Promise<string> {
