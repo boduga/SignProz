@@ -119,26 +119,21 @@ export async function GET(request: NextRequest) {
   const authTokenKey = `sb-${projectRef}-auth-token`
   const authTokenKeyV2 = `sb-${projectRef}-auth-token.v2`
 
-  // Create HTTP redirect response with cookies set on the redirect itself
-  const redirectUrl = new URL('/dashboard', request.url)
-  const response = NextResponse.redirect(redirectUrl)
+  // Build dashboard URL with session data in query params
+  const dashboardUrl = new URL('/dashboard', request.url)
+  dashboardUrl.searchParams.set('access_token', accessToken)
+  dashboardUrl.searchParams.set('refresh_token', fullRefreshToken)
 
-  // Set Supabase auth cookies on the redirect response
-  response.cookies.set(authTokenKey, accessToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'lax',
-    maxAge: 3600,
-    path: '/',
-  })
+  // Use 307 redirect with Set-Cookie headers
+  const response = NextResponse.redirect(dashboardUrl, 307)
 
-  response.cookies.set(authTokenKeyV2, fullRefreshToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'lax',
-    maxAge: 604800,
-    path: '/',
-  })
+  // Set cookies with explicit headers (bypass Next.js cookie handling)
+  response.headers.set('Set-Cookie',
+    `${authTokenKey}=${accessToken}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`
+  )
+  response.headers.append('Set-Cookie',
+    `${authTokenKeyV2}=${fullRefreshToken}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800`
+  )
 
   return response
 }

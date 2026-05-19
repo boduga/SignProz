@@ -116,6 +116,22 @@ export default function DashboardPage() {
   const [fieldPaletteCollapsed, setFieldPaletteCollapsed] = useState(false)
 
   useEffect(() => {
+    // Handle session from magic link callback
+    const params = new URLSearchParams(window.location.search)
+    const accessToken = params.get('access_token')
+    const refreshToken = params.get('refresh_token')
+
+    if (accessToken) {
+      // Store tokens and clear URL params
+      document.cookie = `${window.location.hostname.includes('.') ? '__Host-' : ''}sb-access-token=${accessToken}; path=/; secure; samesite=lax; max-age=3600`
+      if (refreshToken) {
+        document.cookie = `${window.location.hostname.includes('.') ? '__Host-' : ''}sb-refresh-token=${refreshToken}; path=/; secure; samesite=lax; max-age=604800`
+      }
+      // Clean up URL
+      const cleanUrl = window.location.pathname
+      window.history.replaceState({}, '', cleanUrl)
+    }
+
     fetch('/api/auth/session')
       .then((r) => r.json())
       .then((data: Session) => {
