@@ -70,8 +70,44 @@ export async function GET(request: NextRequest) {
     .update({ used_at: new Date().toISOString() })
     .eq('token', token)
 
-  // Redirect to a magic-login page with email encoded
-  return NextResponse.redirect(
-    new URL(`/auth/magic-login?email=${encodeURIComponent(tokenData.email)}`, request.url)
-  )
+  // Build the redirect response
+  const redirectUrl = new URL('/dashboard', request.url)
+  const response = NextResponse.redirect(redirectUrl)
+
+  // Set session cookies using cookie header directly
+  // These cookies will be set when the browser loads /dashboard
+  const sessionData = JSON.stringify({
+    access_token: token, // Use the magic link token as a temporary access token
+    refresh_token: token,
+    expires_at: Date.now() + 3600000,
+    expires_in: 3600,
+    token_type: 'bearer',
+    user: {
+      id: userId,
+      email: tokenData.email,
+    },
+  })
+
+  // Encode for URL safety
+  const encodedSession = encodeURIComponent(sessionData)
+
+  // Set cookie on redirect response
+  response.cookies.set('sb-session', encodedSession, {
+    httpOnly: false,
+    secure: true,
+    sameSite: 'lax',
+    maxAge: 3600,
+    path: '/',
+  })
+
+  // Also set a flag
+  response.cookies.set('auth-success', 'true', {
+    httpOnly: false,
+    secure: true,
+    sameSite: 'lax',
+    maxAge: 60,
+    path: '/',
+  })
+
+  return response
 }

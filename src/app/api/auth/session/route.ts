@@ -5,24 +5,32 @@ import { NextResponse } from 'next/server'
 export async function GET() {
   const cookieStore = await cookies()
   const allCookies = cookieStore.getAll()
-  const authCookies = allCookies.filter(c => c.name.includes('sb-') || c.name.includes('auth'))
 
-  // Check all cookies and look for Supabase session data
-  const accessCookie = allCookies.find(c => c.name.includes('auth-token') && !c.name.includes('.v2'))
-  const refreshCookie = allCookies.find(c => c.name.includes('auth-token.v2'))
+  // Check for our custom session cookie first
+  const sessionCookie = allCookies.find(c => c.name === 'sb-session')
+  if (sessionCookie) {
+    try {
+      const sessionData = JSON.parse(decodeURIComponent(sessionCookie.value))
+      return NextResponse.json({
+        session: {
+          access_token: sessionData.access_token,
+          expires_at: sessionData.expires_at,
+          user: sessionData.user,
+        },
+        user: sessionData.user,
+      })
+    } catch {
+      // Invalid session cookie, continue to normal session check
+    }
+  }
 
+  // Normal Supabase session check
   const supabase = await createServerClient()
   const { data: { session }, error } = await supabase.auth.getSession()
 
-  return NextResponse.json({
-    session: session ? { user: session.user.email, expiresAt: session.expires_at } : null,
-    error: error ? error.message : null,
-    cookies: {
-      total: allCookies.length,
-      authNames: authCookies.map(c => c.name),
-      hasAccessCookie: !!accessCookie,
-      hasRefreshCookie: !!refreshCookie,
-      allCookieNames: allCookies.map(c => c.name),
-    }
-  })
+  if (error || !session) {
+    return NextResponse.json({ session: null, user: null })
+  }
+
+  return NextResponse.json({ session, user: session.user })
 }
