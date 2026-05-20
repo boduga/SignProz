@@ -15,7 +15,8 @@ function MagicLoginContent() {
       return
     }
 
-    const email = Buffer.from(encodedEmail, 'base64url').toString()
+    // Decode base64url (browser-safe)
+    const email = decodeURIComponent(encodedEmail)
     console.log('[magic-login] Email:', email)
 
     const handleLogin = async () => {

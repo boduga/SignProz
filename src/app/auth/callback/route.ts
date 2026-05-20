@@ -71,8 +71,7 @@ export async function GET(request: NextRequest) {
     .eq('token', token)
 
   // Redirect to a magic-login page with email encoded
-  const encodedEmail = Buffer.from(tokenData.email).toString('base64url')
   return NextResponse.redirect(
-    new URL(`/auth/magic-login?email=${encodedEmail}`, request.url)
+    new URL(`/auth/magic-login?email=${encodeURIComponent(tokenData.email)}`, request.url)
   )
 }
