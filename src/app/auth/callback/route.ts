@@ -80,30 +80,27 @@ export async function GET(request: NextRequest) {
     .update({ used_at: new Date().toISOString() })
     .eq('token', token)
 
-  // Create HTML page that uses Supabase client-side exchangeCodeForSession
+  // Create HTML page that uses Supabase client-side setSession
   const html = `<!DOCTYPE html>
 <html>
 <head>
   <title>Signing in...</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body style="font-family: sans-serif; padding: 40px; text-align: center; background: #f5f5f5;">
   <div id="status" style="padding: 20px;">
     <p>Signing you in securely...</p>
   </div>
-  <script>
-    // Initialize Supabase client
-    const supabase = window.supabase.createClient(
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const supabaseClient = createClient(
       '${process.env.NEXT_PUBLIC_SUPABASE_URL}',
       '${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}'
     );
 
-    // Get the token from URL
     const url = new URL(window.location.href);
     const token = url.searchParams.get('token');
 
-    // Exchange token for session using signInWithOtp with the magic link token
-    // This leverages Supabase's built-in session handling
     fetch('/api/auth/magic-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -112,20 +109,19 @@ export async function GET(request: NextRequest) {
     .then(r => r.json())
     .then(data => {
       if (data.access_token) {
-        // Store the session
-        supabase.auth.setSession({
+        supabaseClient.auth.setSession({
           access_token: data.access_token,
           refresh_token: data.refresh_token
         }).then(() => {
-          document.getElementById('status').innerHTML = '<p style="color: green;">Success! Redirecting to dashboard...</p>';
+          document.getElementById('status').innerHTML = '<p style="color: green;">Success! Redirecting...</p>';
           setTimeout(() => window.location.href = '/dashboard', 500);
         });
       } else {
-        document.getElementById('status').innerHTML = '<p style="color: red;">Error: ' + (data.error || 'Failed to create session') + '</p>';
+        document.getElementById('status').innerHTML = '<p style="color: red;">Error: ' + (data.error || 'Failed') + '</p>';
       }
     })
     .catch(err => {
-      document.getElementById('status').innerHTML = '<p style="color: red;">Network error: ' + err.message + '</p>';
+      document.getElementById('status').innerHTML = '<p style="color: red;">Error: ' + err.message + '</p>';
     });
   </script>
 </body>
