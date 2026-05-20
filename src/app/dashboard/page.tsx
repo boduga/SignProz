@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { getBrowserClient } from '@/lib/supabase/browser'
 
 type Tab = 'workspace' | 'referrals'
 

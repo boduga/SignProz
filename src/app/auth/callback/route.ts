@@ -108,13 +108,28 @@ export async function GET(request: NextRequest) {
     })
     .then(r => r.json())
     .then(data => {
+      console.log('Magic session response:', data);
       if (data.access_token) {
         supabaseClient.auth.setSession({
           access_token: data.access_token,
           refresh_token: data.refresh_token
-        }).then(() => {
-          document.getElementById('status').innerHTML = '<p style="color: green;">Success! Redirecting...</p>';
-          setTimeout(() => window.location.href = '/dashboard', 500);
+        }).then(({ error }) => {
+          if (error) {
+            console.error('setSession error:', error);
+            document.getElementById('status').innerHTML = '<p style="color: red;">Session error: ' + error.message + '</p>';
+          } else {
+            // Verify session is persisted by fetching it back
+            supabaseClient.auth.getSession().then(({ data: sessionData }) => {
+              console.log('Verification - current session:', sessionData);
+              if (sessionData.session) {
+                document.getElementById('status').innerHTML = '<p style="color: green;">Session verified! Redirecting...</p>';
+                setTimeout(() => { window.location.href = '/dashboard'; }, 2000);
+              } else {
+                document.getElementById('status').innerHTML = '<p style="color: orange;">Session not persisted. Trying direct redirect...</p>';
+                setTimeout(() => { window.location.href = '/dashboard'; }, 2000);
+              }
+            });
+          }
         });
       } else {
         document.getElementById('status').innerHTML = '<p style="color: red;">Error: ' + (data.error || 'Failed') + '</p>';
