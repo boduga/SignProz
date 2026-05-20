@@ -80,92 +80,58 @@ export async function GET(request: NextRequest) {
     .update({ used_at: new Date().toISOString() })
     .eq('token', token)
 
-  // Create access token JWT
-  const payload = {
-    aud: 'authenticated',
-    exp: Math.floor(Date.now() / 1000) + 3600,
-    iat: Math.floor(Date.now() / 1000),
-    iss: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1`,
-    sub: user.id,
-    email: user.email,
-    role: 'authenticated',
-    aal: 'aal1',
-    authenticity: 'high',
-  }
-
-  const base64Payload = Buffer.from(JSON.stringify(payload)).toString('base64url')
-  const secret = process.env.SUPABASE_SERVICE_ROLE_KEY!
-  const signature = await createHmacSignature(base64Payload, secret)
-
-  const jwtHeader = { alg: 'HS256', typ: 'JWT' }
-  const base64Header = Buffer.from(JSON.stringify(jwtHeader)).toString('base64url')
-  const accessToken = `${base64Header}.${base64Payload}.${signature}`
-
-  // Create refresh token
-  const refreshToken = `${user.id}${Date.now()}${Math.random().toString(36).slice(2)}`
-  const refreshTokenBase64 = Buffer.from(JSON.stringify({
-    id: refreshToken,
-    user_id: user.id,
-    created_at: new Date().toISOString(),
-  })).toString('base64url')
-
-  const refreshSignature = await createHmacSignature(refreshTokenBase64, secret)
-  const fullRefreshToken = `${refreshTokenBase64}.${refreshSignature}`
-
-  // Calculate cookie names from Supabase URL
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-  const urlMatch = supabaseUrl.match(/:\/\/([^.]+)/)
-  const projectRef = urlMatch ? urlMatch[1] : 'sign-proz-bay'
-  const authTokenKey = `sb-${projectRef}-auth-token`
-  const authTokenKeyV2 = `sb-${projectRef}-auth-token.v2`
-
-  // Return HTML that sets cookies via JavaScript then redirects
+  // Create HTML page that uses Supabase client-side exchangeCodeForSession
   const html = `<!DOCTYPE html>
 <html>
 <head>
   <title>Signing in...</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body>
-<script>
-(function() {
-  var accessToken = "${accessToken}";
-  var refreshToken = "${fullRefreshToken}";
-  var authTokenKey = "${authTokenKey}";
-  var authTokenKeyV2 = "${authTokenKeyV2}";
+<body style="font-family: sans-serif; padding: 40px; text-align: center; background: #f5f5f5;">
+  <div id="status" style="padding: 20px;">
+    <p>Signing you in securely...</p>
+  </div>
+  <script>
+    // Initialize Supabase client
+    const supabase = window.supabase.createClient(
+      '${process.env.NEXT_PUBLIC_SUPABASE_URL}',
+      '${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}'
+    );
 
-  // Set cookies with proper options for cross-origin
-  document.cookie = authTokenKey + "=" + accessToken + "; path=/; max-age=3600; SameSite=Lax; Secure";
-  document.cookie = authTokenKeyV2 + "=" + refreshToken + "; path=/; max-age=604800; SameSite=Lax; Secure";
+    // Get the token from URL
+    const url = new URL(window.location.href);
+    const token = url.searchParams.get('token');
 
-  console.log("Cookies set:", authTokenKey, authTokenKeyV2);
-
-  // Redirect to dashboard
-  window.location.href = "/dashboard";
-})();
-</script>
-<noscript>
-  <p>JavaScript required. <a href="/dashboard">Click here to continue</a>.</p>
-</noscript>
+    // Exchange token for session using signInWithOtp with the magic link token
+    // This leverages Supabase's built-in session handling
+    fetch('/api/auth/magic-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: token })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.access_token) {
+        // Store the session
+        supabase.auth.setSession({
+          access_token: data.access_token,
+          refresh_token: data.refresh_token
+        }).then(() => {
+          document.getElementById('status').innerHTML = '<p style="color: green;">Success! Redirecting to dashboard...</p>';
+          setTimeout(() => window.location.href = '/dashboard', 500);
+        });
+      } else {
+        document.getElementById('status').innerHTML = '<p style="color: red;">Error: ' + (data.error || 'Failed to create session') + '</p>';
+      }
+    })
+    .catch(err => {
+      document.getElementById('status').innerHTML = '<p style="color: red;">Network error: ' + err.message + '</p>';
+    });
+  </script>
 </body>
 </html>`
 
   return new NextResponse(html, {
-    headers: {
-      'Content-Type': 'text/html',
-      'Cache-Control': 'no-store',
-    },
+    headers: { 'Content-Type': 'text/html' },
   })
-}
-
-async function createHmacSignature(data: string, secret: string): Promise<string> {
-  const encoder = new TextEncoder()
-  const key = await crypto.subtle.importKey(
-    'raw',
-    encoder.encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign']
-  )
-  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(data))
-  return Buffer.from(signature).toString('base64url')
 }
