@@ -64,6 +64,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/login?error=user_not_found', request.url))
   }
 
+  console.log('[callback] User found:', { userId, email: tokenData.email })
+
   // Mark token as used
   await supabase
     .from('auth_tokens')
@@ -91,6 +93,8 @@ export async function GET(request: NextRequest) {
   // Encode for URL safety
   const encodedSession = encodeURIComponent(sessionData)
 
+  console.log('[callback] Setting sb-session cookie, length:', encodedSession.length)
+
   // Set cookie on redirect response
   response.cookies.set('sb-session', encodedSession, {
     httpOnly: false,
@@ -109,5 +113,6 @@ export async function GET(request: NextRequest) {
     path: '/',
   })
 
+  console.log('[callback] Redirecting to dashboard')
   return response
 }
