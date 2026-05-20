@@ -64,85 +64,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/login?error=user_not_found', request.url))
   }
 
-  // Fetch user details
-  const { data: userData } = await supabaseAdmin.auth.admin.getUserById(userId)
-
-  if (!userData?.user) {
-    console.error('Could not fetch user:', userId)
-    return NextResponse.redirect(new URL('/login?error=user_error', request.url))
-  }
-
-  const user = userData.user
-
   // Mark token as used
   await supabase
     .from('auth_tokens')
     .update({ used_at: new Date().toISOString() })
     .eq('token', token)
 
-  // Create HTML page that uses Supabase client-side setSession
-  const html = `<!DOCTYPE html>
-<html>
-<head>
-  <title>Signing in...</title>
-</head>
-<body style="font-family: sans-serif; padding: 40px; text-align: center; background: #f5f5f5;">
-  <div id="status" style="padding: 20px;">
-    <p>Signing you in securely...</p>
-  </div>
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-
-    const supabaseClient = createClient(
-      '${process.env.NEXT_PUBLIC_SUPABASE_URL}',
-      '${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}'
-    );
-
-    const url = new URL(window.location.href);
-    const token = url.searchParams.get('token');
-
-    fetch('/api/auth/magic-session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: token })
-    })
-    .then(r => r.json())
-    .then(data => {
-      console.log('Magic session response:', data);
-      if (data.access_token) {
-        supabaseClient.auth.setSession({
-          access_token: data.access_token,
-          refresh_token: data.refresh_token
-        }).then(({ error }) => {
-          if (error) {
-            console.error('setSession error:', error);
-            document.getElementById('status').innerHTML = '<p style="color: red;">Session error: ' + error.message + '</p>';
-          } else {
-            // Verify session is persisted by fetching it back
-            supabaseClient.auth.getSession().then(({ data: sessionData }) => {
-              console.log('Verification - current session:', sessionData);
-              if (sessionData.session) {
-                document.getElementById('status').innerHTML = '<p style="color: green;">Session verified! Redirecting...</p>';
-                setTimeout(() => { window.location.href = '/dashboard'; }, 2000);
-              } else {
-                document.getElementById('status').innerHTML = '<p style="color: orange;">Session not persisted. Trying direct redirect...</p>';
-                setTimeout(() => { window.location.href = '/dashboard'; }, 2000);
-              }
-            });
-          }
-        });
-      } else {
-        document.getElementById('status').innerHTML = '<p style="color: red;">Error: ' + (data.error || 'Failed') + '</p>';
-      }
-    })
-    .catch(err => {
-      document.getElementById('status').innerHTML = '<p style="color: red;">Error: ' + err.message + '</p>';
-    });
-  </script>
-</body>
-</html>`
-
-  return new NextResponse(html, {
-    headers: { 'Content-Type': 'text/html' },
-  })
+  // Redirect to a magic-login page with email encoded
+  const encodedEmail = Buffer.from(tokenData.email).toString('base64url')
+  return NextResponse.redirect(
+    new URL(`/auth/magic-login?email=${encodedEmail}`, request.url)
+  )
 }
