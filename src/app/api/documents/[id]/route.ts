@@ -1,6 +1,7 @@
 import { createServerClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { addAuditLog } from '@/lib/utils'
+import { getSession } from '@/lib/auth'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -8,18 +9,17 @@ interface RouteParams {
 
 export async function GET(request: Request, { params }: RouteParams) {
   const { id } = await params
-  const supabase = await createServerClient()
-  const { data: { session } } = await supabase.auth.getSession()
-
+  const session = await getSession()
   if (!session) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  const supabase = await createServerClient()
   const { data, error } = await supabase
     .from('documents')
     .select('*, signers(*), signature_fields(*), audit_logs(*)')
     .eq('id', id)
-    .eq('user_id', session.user.id)
+    .eq('user_id', session.id)
     .single()
 
   if (error || !data) {
@@ -31,19 +31,19 @@ export async function GET(request: Request, { params }: RouteParams) {
 
 export async function PUT(request: Request, { params }: RouteParams) {
   const { id } = await params
-  const supabase = await createServerClient()
-  const supabaseAdmin = createAdminClient()
-  const { data: { session } } = await supabase.auth.getSession()
-
+  const session = await getSession()
   if (!session) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
+  const supabase = await createServerClient()
+  const supabaseAdmin = createAdminClient()
 
   const { data: existing } = await supabase
     .from('documents')
     .select('status')
     .eq('id', id)
-    .eq('user_id', session.user.id)
+    .eq('user_id', session.id)
     .single()
 
   if (!existing) {
@@ -70,26 +70,26 @@ export async function PUT(request: Request, { params }: RouteParams) {
     return Response.json({ error: error.message }, { status: 400 })
   }
 
-  await addAuditLog(supabaseAdmin, id, 'document.updated', session.user.email)
+  await addAuditLog(supabaseAdmin, id, 'document.updated', session.email)
 
   return Response.json({ document: data })
 }
 
 export async function DELETE(request: Request, { params }: RouteParams) {
   const { id } = await params
-  const supabase = await createServerClient()
-  const supabaseAdmin = createAdminClient()
-  const { data: { session } } = await supabase.auth.getSession()
-
+  const session = await getSession()
   if (!session) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
+  const supabase = await createServerClient()
+  const supabaseAdmin = createAdminClient()
 
   const { data: existing } = await supabase
     .from('documents')
     .select('id')
     .eq('id', id)
-    .eq('user_id', session.user.id)
+    .eq('user_id', session.id)
     .single()
 
   if (!existing) {

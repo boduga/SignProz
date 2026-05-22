@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { addAuditLog, isSequentialSigning } from '@/lib/utils'
 import { sendMagicLinkEmail } from '@/lib/email/sendMagicLink'
 import { NextResponse } from 'next/server'
+import { getSession } from '@/lib/auth'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -10,13 +11,13 @@ interface RouteParams {
 
 export async function POST(request: Request, { params }: RouteParams) {
   const { id } = await params
-  const supabase = await createServerClient()
-  const supabaseAdmin = createAdminClient()
-  const { data: { session } } = await supabase.auth.getSession()
-
+  const session = await getSession()
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
+  const supabase = await createServerClient()
+  const supabaseAdmin = createAdminClient()
 
   // Fetch document with signers, signature_fields, and profile (owner)
   const { data: document, error: docError } = await supabaseAdmin
@@ -30,7 +31,7 @@ export async function POST(request: Request, { params }: RouteParams) {
   }
 
   // Verify document belongs to the authenticated user
-  if (document.user_id !== session.user.id) {
+  if (document.user_id !== session.id) {
     return NextResponse.json({ error: 'Document not found' }, { status: 404 })
   }
 
@@ -75,7 +76,7 @@ export async function POST(request: Request, { params }: RouteParams) {
 
   // Get owner email from profile or session
   const ownerEmail =
-    (document.profile as { email?: string })?.email || session.user.email || ''
+    (document.profile as { email?: string })?.email || session.email || ''
 
   // Send emails and track results
   const emailResults: { email: string; success: boolean; error?: string }[] = []
@@ -117,7 +118,7 @@ export async function POST(request: Request, { params }: RouteParams) {
   }
 
   // Add audit log with signer count, sequential flag, emails sent
-  await addAuditLog(supabaseAdmin, id, 'document.sent', session.user.email, {
+  await addAuditLog(supabaseAdmin, id, 'document.sent', session.email, {
     signer_count: signers.length,
     sequential,
     emails_sent: emailResults.filter((r) => r.success).length,

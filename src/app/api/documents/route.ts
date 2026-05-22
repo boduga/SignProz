@@ -2,15 +2,16 @@ import { createServerClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { addAuditLog } from '@/lib/utils'
 import { NextResponse } from 'next/server'
+import { getSession } from '@/lib/auth'
 
 export async function GET(request: Request) {
-  const supabase = await createServerClient()
-  const { data: { session } } = await supabase.auth.getSession()
+  const session = await getSession()
 
   if (!session) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  const supabase = await createServerClient()
   const { searchParams } = new URL(request.url)
   const page = parseInt(searchParams.get('page') || '1', 10)
   const limit = parseInt(searchParams.get('limit') || '20', 10)
@@ -20,7 +21,7 @@ export async function GET(request: Request) {
   let query = supabase
     .from('documents')
     .select('*', { count: 'exact' })
-    .eq('user_id', session.user.id)
+    .eq('user_id', session.id)
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1)
 
@@ -38,14 +39,14 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const supabase = await createServerClient()
-  const supabaseAdmin = createAdminClient()
-  const { data: { session } } = await supabase.auth.getSession()
+  const session = await getSession()
 
   if (!session) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  const supabase = await createServerClient()
+  const supabaseAdmin = createAdminClient()
   const { title, content, template_id, expiration_days } = await request.json()
 
   if (!title) {
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
   const { data, error } = await supabaseAdmin
     .from('documents')
     .insert({
-      user_id: session.user.id,
+      user_id: session.id,
       title,
       content: content || null,
       template_id: template_id || null,
@@ -69,7 +70,7 @@ export async function POST(request: Request) {
     return Response.json({ error: error.message }, { status: 400 })
   }
 
-  await addAuditLog(supabaseAdmin, data.id, 'document.created', session.user.email)
+  await addAuditLog(supabaseAdmin, data.id, 'document.created', session.email)
 
   return NextResponse.json({ document: data }, { status: 201 })
 }

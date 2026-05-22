@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { sendMagicLinkEmail } from '@/lib/email'
 import { generateMagicToken, getTokenExpiry, addAuditLog } from '@/lib/utils'
 import { NextResponse } from 'next/server'
+import { getSession } from '@/lib/auth'
 
 interface RouteParams {
   params: Promise<{ id: string; signerId: string }>
@@ -10,20 +11,20 @@ interface RouteParams {
 
 export async function POST(request: Request, { params }: RouteParams) {
   const { id, signerId } = await params
-  const supabase = await createServerClient()
-  const supabaseAdmin = createAdminClient()
-  const { data: { session } } = await supabase.auth.getSession()
-
+  const session = await getSession()
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
+  const supabase = await createServerClient()
+  const supabaseAdmin = createAdminClient()
 
   // Verify document belongs to the user
   const { data: document } = await supabase
     .from('documents')
     .select('id, title, user_id, expiration_days')
     .eq('id', id)
-    .eq('user_id', session.user.id)
+    .eq('user_id', session.id)
     .single()
 
   if (!document) {
@@ -64,7 +65,7 @@ export async function POST(request: Request, { params }: RouteParams) {
   await sendMagicLinkEmail(
     { ...signer, magic_token: newToken },
     { ...document, id },
-    session.user.email || ''
+    session.email || ''
   )
 
   // Log the action to audit_logs
@@ -72,7 +73,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     supabaseAdmin,
     id,
     'signer_resend_link',
-    session.user.email || undefined,
+    session.email || undefined,
     { signer_id: signerId, signer_email: signer.email }
   )
 

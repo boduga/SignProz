@@ -1,6 +1,7 @@
 import { createServerClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
+import { getSession } from '@/lib/auth'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -8,13 +9,12 @@ interface RouteParams {
 
 export async function GET(request: Request, { params }: RouteParams) {
   const { id } = await params
-  const supabase = await createServerClient()
-  const { data: { session } } = await supabase.auth.getSession()
-
+  const session = await getSession()
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  const supabase = await createServerClient()
   const { data, error } = await supabase
     .from('signers')
     .select('*')
@@ -30,20 +30,20 @@ export async function GET(request: Request, { params }: RouteParams) {
 
 export async function POST(request: Request, { params }: RouteParams) {
   const { id } = await params
-  const supabase = await createServerClient()
-  const supabaseAdmin = createAdminClient()
-  const { data: { session } } = await supabase.auth.getSession()
-
+  const session = await getSession()
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
+  const supabase = await createServerClient()
+  const supabaseAdmin = createAdminClient()
 
   // Verify document belongs to the user
   const { data: document } = await supabase
     .from('documents')
     .select('id, status')
     .eq('id', id)
-    .eq('user_id', session.user.id)
+    .eq('user_id', session.id)
     .single()
 
   if (!document) {
