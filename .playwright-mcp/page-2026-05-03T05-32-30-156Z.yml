@@ -1,0 +1,161 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - navigation [ref=e4]:
+        - link "SignProz" [ref=e5] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e6]:
+          - link "Pricing" [ref=e7] [cursor=pointer]:
+            - /url: /pricing
+          - link "About" [ref=e8] [cursor=pointer]:
+            - /url: /about
+          - link "Sign In" [ref=e9] [cursor=pointer]:
+            - /url: /login
+    - main [ref=e10]:
+      - generic [ref=e11]:
+        - heading "Simple, transparent pricing" [level=1] [ref=e12]
+        - paragraph [ref=e13]: Start free and scale as you grow. No hidden fees, no surprise charges.
+      - generic [ref=e15]:
+        - button "Yearly billing" [ref=e16]
+        - button "Monthly billing" [ref=e17]
+      - generic [ref=e18]:
+        - generic [ref=e19]:
+          - generic:
+            - generic:
+              - img
+          - heading "Free" [level=2] [ref=e21]
+          - paragraph [ref=e22]: For individuals just getting started
+          - generic [ref=e23]:
+            - generic [ref=e24]: $0
+            - text: /month
+          - link "Get started free" [ref=e25] [cursor=pointer]:
+            - /url: /signup
+          - list [ref=e26]:
+            - listitem [ref=e27]:
+              - img [ref=e28]
+              - text: 5 documents/month
+            - listitem [ref=e30]:
+              - img [ref=e31]
+              - text: 1 sender
+            - listitem [ref=e33]:
+              - img [ref=e34]
+              - text: Email notifications
+            - listitem [ref=e36]:
+              - img [ref=e37]
+              - text: Basic templates
+            - listitem [ref=e39]:
+              - img [ref=e40]
+              - text: Community support
+        - generic [ref=e42]:
+          - generic [ref=e43]: Most Popular
+          - generic:
+            - generic:
+              - img
+          - heading "Pro" [level=2] [ref=e45]
+          - paragraph [ref=e46]: For growing teams and professionals
+          - generic [ref=e47]:
+            - generic [ref=e48]: $10
+            - paragraph [ref=e49]: $10 / month
+          - paragraph [ref=e50]: Billed annually (save 50%)
+          - link "Start free trial" [ref=e51] [cursor=pointer]:
+            - /url: /signup
+          - list [ref=e52]:
+            - listitem [ref=e53]:
+              - img [ref=e54]
+              - text: Unlimited documents
+            - listitem [ref=e56]:
+              - img [ref=e57]
+              - text: 5 senders
+            - listitem [ref=e59]:
+              - img [ref=e60]
+              - text: Sequential & parallel signing
+            - listitem [ref=e62]:
+              - img [ref=e63]
+              - text: AI-assisted drafting
+            - listitem [ref=e65]:
+              - img [ref=e66]
+              - text: Bulk sending
+            - listitem [ref=e68]:
+              - img [ref=e69]
+              - text: Custom branding
+            - listitem [ref=e71]:
+              - img [ref=e72]
+              - text: Priority support
+        - generic [ref=e74]:
+          - generic:
+            - generic:
+              - img
+          - heading "Premium" [level=2] [ref=e76]
+          - paragraph [ref=e77]: For organizations that need it all
+          - generic [ref=e78]:
+            - generic [ref=e79]: $39.95
+            - paragraph [ref=e80]: $39.95 / month
+          - paragraph [ref=e81]: Billed annually (save 33%)
+          - link "Start free trial" [ref=e82] [cursor=pointer]:
+            - /url: /signup
+          - list [ref=e83]:
+            - listitem [ref=e84]:
+              - img [ref=e85]
+              - text: Everything in Pro
+            - listitem [ref=e87]:
+              - img [ref=e88]
+              - text: Unlimited senders
+            - listitem [ref=e90]:
+              - img [ref=e91]
+              - text: HIPAA compliance mode
+            - listitem [ref=e93]:
+              - img [ref=e94]
+              - text: 400+ integrations
+            - listitem [ref=e96]:
+              - img [ref=e97]
+              - text: Sales CRM integration
+            - listitem [ref=e99]:
+              - img [ref=e100]
+              - text: Microsoft 365 integration
+            - listitem [ref=e102]:
+              - img [ref=e103]
+              - text: Dedicated support
+            - listitem [ref=e105]:
+              - img [ref=e106]
+              - text: API access (affordable tiers)
+        - generic [ref=e108]:
+          - generic:
+            - generic:
+              - img
+          - heading "Enterprise" [level=2] [ref=e110]
+          - paragraph [ref=e111]: Advanced scale and compliance for larger teams
+          - generic [ref=e112]:
+            - generic [ref=e113]: $499
+            - text: /month
+          - link "Contact sales" [ref=e114] [cursor=pointer]:
+            - /url: /signup
+          - list [ref=e115]:
+            - listitem [ref=e116]:
+              - img [ref=e117]
+              - text: Unlimited documents
+            - listitem [ref=e119]:
+              - img [ref=e120]
+              - text: Unlimited senders and team roles
+            - listitem [ref=e122]:
+              - img [ref=e123]
+              - text: SLA + SSO
+            - listitem [ref=e125]:
+              - img [ref=e126]
+              - text: White-labeling & custom branding
+            - listitem [ref=e128]:
+              - img [ref=e129]
+              - text: API and webhook support
+            - listitem [ref=e131]:
+              - img [ref=e132]
+              - text: Priority onboarding and support
+            - listitem [ref=e134]:
+              - img [ref=e135]
+              - text: Security controls and audit exports
+            - listitem [ref=e137]:
+              - img [ref=e138]
+              - text: Dedicated account management
+      - paragraph [ref=e140]: All plans include end-to-end encryption, audit trails, and 99.9% uptime SLA.
+    - contentinfo [ref=e141]:
+      - paragraph [ref=e142]: © 2026 SignProz. All rights reserved.
+  - button "Open Next.js Dev Tools" [ref=e148] [cursor=pointer]:
+    - img [ref=e149]

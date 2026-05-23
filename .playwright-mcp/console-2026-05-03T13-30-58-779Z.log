@@ -1,0 +1,83 @@
+[     498ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  150148ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  150281ms] [LOG] [Fast Refresh] done in 233ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  188900ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  192058ms] [ERROR] ./src/app/(site)
+You cannot have two parallel pages that resolve to the same path. Please check /(auth)/signup and /(site). @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:0
+[  192061ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/?_rsc=wnywt:0
+[  192140ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/?_rsc=wnywt:0
+[  192218ms] [ERROR] ./src/app/(site)
+You cannot have two parallel pages that resolve to the same path. Please check /(auth)/signup and /(site). @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:0
+[  192262ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/?_rsc=wnywt:0
+[  192271ms] [ERROR] ./src/app/(site)
+You cannot have two parallel pages that resolve to the same path. Please check /(auth)/signup and /(site). @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:0
+[  192339ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/:0
+[  192719ms] Error: ./src/app/(site)
+You cannot have two parallel pages that resolve to the same path. Please check /(auth)/signup and /(site).
+
+    at Object.getCompilationErrors (file:///home/babasola/Dev/signproz/node_modules/next/dist/server/dev/hot-reloader-turbopack.js:1175:55)
+    at DevBundlerService.getCompilationError (file:///home/babasola/Dev/signproz/node_modules/next/dist/server/lib/dev-bundler-service.js:44:55)
+    at DevServer.getCompilationError (file:///home/babasola/Dev/signproz/node_modules/next/dist/server/dev/next-dev-server.js:719:42)
+    at DevServer.findPageComponents (file:///home/babasola/Dev/signproz/node_modules/next/dist/server/dev/next-dev-server.js:689:43)
+    at async DevServer.renderErrorToResponseImpl (file:///home/babasola/Dev/signproz/node_modules/next/dist/server/base-server.js:1745:26)
+[  192713ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  192722ms] [ERROR] ./src/app/(site)
+You cannot have two parallel pages that resolve to the same path. Please check /(auth)/signup and /(site). @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:0
+[  192723ms] [ERROR] ./src/app/(site)
+You cannot have two parallel pages that resolve to the same path. Please check /(auth)/signup and /(site). @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:0
+[  192724ms] [ERROR] ./src/app/(site)
+You cannot have two parallel pages that resolve to the same path. Please check /(auth)/signup and /(site). @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:0
+[  192725ms] [ERROR] ./src/app/(site)
+You cannot have two parallel pages that resolve to the same path. Please check /(auth)/signup and /(site). @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:0
+[  192725ms] [ERROR] ./src/app/(site)
+You cannot have two parallel pages that resolve to the same path. Please check /(auth)/signup and /(site). @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:0
+[  192725ms] [ERROR] ./src/app/(site)
+You cannot have two parallel pages that resolve to the same path. Please check /(auth)/signup and /(site). @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:0
+[  192882ms] [ERROR] ./src/app/(site)
+You cannot have two parallel pages that resolve to the same path. Please check /(auth)/signup and /(site). @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:0
+[  192886ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  193412ms] [ERROR] ./src/app/(site)
+You cannot have two parallel pages that resolve to the same path. Please check /(auth)/signup and /(site). @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:0
+[  193477ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  221105ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  221486ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/:0
+[  221550ms] Error: ./src/app/(site)
+You cannot have two parallel pages that resolve to the same path. Please check /(auth)/login and /(site).
+
+    at Object.getCompilationErrors (file:///home/babasola/Dev/signproz/node_modules/next/dist/server/dev/hot-reloader-turbopack.js:1175:55)
+    at DevBundlerService.getCompilationError (file:///home/babasola/Dev/signproz/node_modules/next/dist/server/lib/dev-bundler-service.js:44:55)
+    at DevServer.getCompilationError (file:///home/babasola/Dev/signproz/node_modules/next/dist/server/dev/next-dev-server.js:719:42)
+    at DevServer.findPageComponents (file:///home/babasola/Dev/signproz/node_modules/next/dist/server/dev/next-dev-server.js:689:43)
+    at async DevServer.renderErrorToResponseImpl (file:///home/babasola/Dev/signproz/node_modules/next/dist/server/base-server.js:1745:26)
+[  221550ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  221553ms] [ERROR] ./src/app/(site)
+You cannot have two parallel pages that resolve to the same path. Please check /(auth)/login and /(site). @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:0
+[  221553ms] [ERROR] ./src/app/(site)
+You cannot have two parallel pages that resolve to the same path. Please check /(auth)/signup and /(site). @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:0
+[  221554ms] [ERROR] ./src/app/(site)
+You cannot have two parallel pages that resolve to the same path. Please check /(auth)/signup and /(site). @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:0
+[  221554ms] [ERROR] ./src/app/(site)
+You cannot have two parallel pages that resolve to the same path. Please check /(auth)/login and /(site). @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:0
+[  221554ms] [ERROR] ./src/app/(site)
+You cannot have two parallel pages that resolve to the same path. Please check /(auth)/signup and /(site). @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:0
+[  221554ms] [ERROR] ./src/app/(site)
+You cannot have two parallel pages that resolve to the same path. Please check /(auth)/login and /(site). @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:0
+[  221555ms] [ERROR] ./src/app/(site)
+You cannot have two parallel pages that resolve to the same path. Please check /(auth)/signup and /(site). @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:0
+[  221555ms] [ERROR] ./src/app/(site)
+You cannot have two parallel pages that resolve to the same path. Please check /(auth)/login and /(site). @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:0
+[  221555ms] [ERROR] ./src/app/(site)
+You cannot have two parallel pages that resolve to the same path. Please check /(auth)/signup and /(site). @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:0
+[  221556ms] [ERROR] ./src/app/(site)
+You cannot have two parallel pages that resolve to the same path. Please check /(auth)/login and /(site). @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:0
+[  221556ms] [ERROR] ./src/app/(site)
+You cannot have two parallel pages that resolve to the same path. Please check /(auth)/signup and /(site). @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:0
+[  221985ms] [ERROR] ./src/app/(site)
+You cannot have two parallel pages that resolve to the same path. Please check /(auth)/login and /(site). @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:0
+[  221986ms] [ERROR] ./src/app/(site)
+You cannot have two parallel pages that resolve to the same path. Please check /(auth)/signup and /(site). @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:0
+[  222300ms] [ERROR] ./src/app/(site)
+You cannot have two parallel pages that resolve to the same path. Please check /(auth)/login and /(site). @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:0
+[  222301ms] [ERROR] ./src/app/(site)
+You cannot have two parallel pages that resolve to the same path. Please check /(auth)/signup and /(site). @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:0
+[  222367ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226

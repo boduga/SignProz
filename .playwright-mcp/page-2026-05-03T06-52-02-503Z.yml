@@ -1,0 +1,218 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - navigation [ref=e4]:
+        - generic [ref=e5]:
+          - link "SignProz" [ref=e6] [cursor=pointer]:
+            - /url: /
+            - img [ref=e8]
+            - generic [ref=e10]: SignProz
+          - link "Affiliate Program" [ref=e11] [cursor=pointer]:
+            - /url: /affiliate
+        - generic [ref=e12]:
+          - link "Home" [ref=e13] [cursor=pointer]:
+            - /url: /
+          - link "Pricing" [ref=e14] [cursor=pointer]:
+            - /url: /pricing
+          - link "Templates" [ref=e15] [cursor=pointer]:
+            - /url: /templates
+          - link "Sign In" [ref=e16] [cursor=pointer]:
+            - /url: /login
+          - link "Start Free" [ref=e17] [cursor=pointer]:
+            - /url: /signup
+    - main [ref=e18]:
+      - generic [ref=e19]:
+        - generic [ref=e21]:
+          - generic [ref=e22]:
+            - paragraph [ref=e23]: Secure eSignature platform
+            - heading "Professional agreement workflows for modern teams" [level=1] [ref=e24]
+            - paragraph [ref=e25]: SignProz helps you prepare, send, sign, and track agreements at scale while offering partner rewards and API-ready automation.
+            - generic [ref=e26]:
+              - link "Start free trial" [ref=e27] [cursor=pointer]:
+                - /url: /signup
+              - link "View pricing" [ref=e28] [cursor=pointer]:
+                - /url: /pricing
+              - link "Explore templates" [ref=e29] [cursor=pointer]:
+                - /url: /templates
+              - button "AI FAQ Chat" [ref=e30]
+          - generic [ref=e32]:
+            - heading "At a glance" [level=3] [ref=e33]
+            - generic [ref=e34]:
+              - generic [ref=e35]:
+                - paragraph [ref=e36]: Integrations
+                - paragraph [ref=e37]: 400+
+              - generic [ref=e38]:
+                - paragraph [ref=e39]: Affiliate reward
+                - paragraph [ref=e40]: 20-30%
+              - generic [ref=e41]:
+                - paragraph [ref=e42]: Sending modes
+                - paragraph [ref=e43]: Bulk + SMS
+              - generic [ref=e44]:
+                - paragraph [ref=e45]: Security
+                - paragraph [ref=e46]: HIPAA-ready
+            - paragraph [ref=e47]: Designed for sales, legal operations, HR, and customer onboarding teams.
+        - generic [ref=e48]:
+          - generic [ref=e49]:
+            - img [ref=e51]
+            - heading "Document Workspace" [level=3] [ref=e53]
+            - paragraph [ref=e54]: Build, route, and manage agreement packets with reusable templates and signing links.
+          - generic [ref=e55]:
+            - img [ref=e57]
+            - heading "AI-Assisted Agreements" [level=3] [ref=e59]
+            - paragraph [ref=e60]: Speed up reviews and drafting with AI assistance for clauses, summaries, and templates.
+          - generic [ref=e61]:
+            - img [ref=e63]
+            - heading "Recurring Affiliate Rewards" [level=3] [ref=e65]
+            - paragraph [ref=e66]: Earn ongoing commissions with transparent tiering and built-in referral analytics.
+        - generic [ref=e67]:
+          - generic [ref=e68]:
+            - heading "SignProz vs Popular eSignature Platforms" [level=2] [ref=e69]:
+              - img [ref=e71]
+              - text: SignProz vs Popular eSignature Platforms
+            - generic [ref=e73]: Feature and pricing comparison (high-level)
+          - table [ref=e75]:
+            - rowgroup [ref=e76]:
+              - row "Platform Entry pricing AI assistance Integrations API access Affiliate rewards" [ref=e77]:
+                - columnheader "Platform" [ref=e78]
+                - columnheader "Entry pricing" [ref=e79]
+                - columnheader "AI assistance" [ref=e80]
+                - columnheader "Integrations" [ref=e81]
+                - columnheader "API access" [ref=e82]
+                - columnheader "Affiliate rewards" [ref=e83]
+            - rowgroup [ref=e84]:
+              - row "SignProz $10/mo annual Pro ($20 monthly) · Premium $39.95/mo annual Built-in AI agreement review + AI template generation 400+ + Microsoft 365 + CRM Affordable API tiers 20-30% recurring" [ref=e85]:
+                - cell "SignProz" [ref=e86]
+                - cell "$10/mo annual Pro ($20 monthly) · Premium $39.95/mo annual" [ref=e87]
+                - cell "Built-in AI agreement review + AI template generation" [ref=e88]
+                - cell "400+ + Microsoft 365 + CRM" [ref=e89]
+                - cell "Affordable API tiers" [ref=e90]
+                - cell "20-30% recurring" [ref=e91]
+              - row "DocuSign Generally higher SMB entry plans Available in selected plans/add-ons Broad enterprise ecosystem Yes Not core positioning" [ref=e92]:
+                - cell "DocuSign" [ref=e93]
+                - cell "Generally higher SMB entry plans" [ref=e94]
+                - cell "Available in selected plans/add-ons" [ref=e95]
+                - cell "Broad enterprise ecosystem" [ref=e96]
+                - cell "Yes" [ref=e97]
+                - cell "Not core positioning" [ref=e98]
+              - row "Dropbox Sign (HelloSign) Mid-market monthly tiers Limited AI-first positioning Strong SMB integrations Yes Not standard" [ref=e99]:
+                - cell "Dropbox Sign (HelloSign)" [ref=e100]
+                - cell "Mid-market monthly tiers" [ref=e101]
+                - cell "Limited AI-first positioning" [ref=e102]
+                - cell "Strong SMB integrations" [ref=e103]
+                - cell "Yes" [ref=e104]
+                - cell "Not standard" [ref=e105]
+              - row "Adobe Acrobat Sign Enterprise-oriented pricing Adobe AI capabilities in broader suite Adobe + Microsoft ecosystem Yes Not standard" [ref=e106]:
+                - cell "Adobe Acrobat Sign" [ref=e107]
+                - cell "Enterprise-oriented pricing" [ref=e108]
+                - cell "Adobe AI capabilities in broader suite" [ref=e109]
+                - cell "Adobe + Microsoft ecosystem" [ref=e110]
+                - cell "Yes" [ref=e111]
+                - cell "Not standard" [ref=e112]
+              - row "PandaDoc Document workflow focused tiers Template/content automation features Sales-focused integrations Yes Partner program varies" [ref=e113]:
+                - cell "PandaDoc" [ref=e114]
+                - cell "Document workflow focused tiers" [ref=e115]
+                - cell "Template/content automation features" [ref=e116]
+                - cell "Sales-focused integrations" [ref=e117]
+                - cell "Yes" [ref=e118]
+                - cell "Partner program varies" [ref=e119]
+              - row "SignNow Competitive SMB pricing bands Automation-centric, lighter AI focus Business app connectors Yes Not core positioning" [ref=e120]:
+                - cell "SignNow" [ref=e121]
+                - cell "Competitive SMB pricing bands" [ref=e122]
+                - cell "Automation-centric, lighter AI focus" [ref=e123]
+                - cell "Business app connectors" [ref=e124]
+                - cell "Yes" [ref=e125]
+                - cell "Not core positioning" [ref=e126]
+          - paragraph [ref=e127]: "Note: competitor details are directional and can vary by edition, region, and contract terms."
+        - generic [ref=e128]:
+          - generic [ref=e129]:
+            - heading "Key Features" [level=2] [ref=e130]:
+              - img [ref=e132]
+              - text: Key Features
+            - generic [ref=e134]: Production-ready capabilities
+          - generic [ref=e135]:
+            - generic [ref=e136]:
+              - img [ref=e137]
+              - text: Document Workspace
+            - generic [ref=e139]:
+              - img [ref=e140]
+              - text: Recurring Affiliate Rewards (20-30%)
+            - generic [ref=e142]:
+              - img [ref=e143]
+              - text: Custom Branding
+            - generic [ref=e145]:
+              - img [ref=e146]
+              - text: Signing Links
+            - generic [ref=e148]:
+              - img [ref=e149]
+              - text: HIPAA Compliance
+            - generic [ref=e151]:
+              - img [ref=e152]
+              - text: 400+ Integrations
+            - generic [ref=e154]:
+              - img [ref=e155]
+              - text: AI-Assisted Agreements
+            - generic [ref=e157]:
+              - img [ref=e158]
+              - text: SMS Delivery
+            - generic [ref=e160]:
+              - img [ref=e161]
+              - text: Native PDF Editing
+            - generic [ref=e163]:
+              - img [ref=e164]
+              - text: Microsoft 365 Integration
+            - generic [ref=e166]:
+              - img [ref=e167]
+              - text: Mobile App
+            - generic [ref=e169]:
+              - img [ref=e170]
+              - text: Sales CRM Integration
+            - generic [ref=e172]:
+              - img [ref=e173]
+              - text: Interactive Pricing Tables
+            - generic [ref=e175]:
+              - img [ref=e176]
+              - text: Payments
+            - generic [ref=e178]:
+              - img [ref=e179]
+              - text: Bulk Sending
+            - generic [ref=e181]:
+              - img [ref=e182]
+              - text: Workflow Automation
+            - generic [ref=e184]:
+              - img [ref=e185]
+              - text: Affordable API
+        - generic [ref=e188]:
+          - generic [ref=e189]:
+            - heading "AI Assisted Chatbot FAQ" [level=3] [ref=e190]:
+              - img [ref=e192]
+              - text: AI Assisted Chatbot FAQ
+            - paragraph [ref=e194]: Get quick, practical answers about integrations, compliance, API usage, pricing, and signing workflows.
+          - button "Open AI FAQ" [ref=e195]
+      - button "AI FAQ" [ref=e196] [cursor=pointer]:
+        - img [ref=e198]
+        - text: AI FAQ
+    - contentinfo [ref=e200]:
+      - paragraph [ref=e201]: © 2026 SignProz. All rights reserved.
+      - generic [ref=e202]:
+        - link "Privacy Policy" [ref=e203] [cursor=pointer]:
+          - /url: /privacy
+        - link "Terms of Service" [ref=e204] [cursor=pointer]:
+          - /url: /terms
+    - generic [ref=e217]:
+      - generic [ref=e218]:
+        - heading "SignProz AI FAQ Assistant" [level=2] [ref=e219]
+        - button [ref=e220]:
+          - img [ref=e221]
+      - generic [ref=e223]:
+        - paragraph [ref=e225]: Ask about plans, API, integrations, compliance, and signing flow.
+        - generic [ref=e226]:
+          - button "How does affiliate commission work?" [ref=e227]
+          - button "What API and integrations are supported?" [ref=e228]
+          - button "How do I send documents in bulk?" [ref=e229]
+          - button "Do you support HIPAA compliant workflows?" [ref=e230]
+        - generic [ref=e231]:
+          - textbox "Ask SignProz a question..." [ref=e232]
+          - button "Send" [disabled] [ref=e233]
+  - button "Open Next.js Dev Tools" [ref=e210] [cursor=pointer]:
+    - img [ref=e211]
+  - alert [ref=e214]
